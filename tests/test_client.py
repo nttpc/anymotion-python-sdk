@@ -37,8 +37,8 @@ class TestInit(object):
     @pytest.mark.parametrize(
         "client_id, client_secret, api_url, expected",
         [
-            ("", "", "", "Invalid Client ID: "),
-            ("client_id", "", "", "Invalid Client Secret: "),
+            ("", "", "", "Client ID is not set."),
+            ("client_id", "", "", "Client Secret is not set."),
             ("client_id", "client_secret", "", "Invalid API URL: "),
             (
                 "client_id",
@@ -129,7 +129,20 @@ class TestExtractKeypoint(object):
             urljoin(client._api_url, "keypoints/"), json={"id": expected_keypoint_id}
         )
 
-        keypoint_id = client.extract_keypoint_from_image(image_id)
+        keypoint_id = client.extract_keypoint(image_id=image_id)
+
+        assert keypoint_id == expected_keypoint_id
+
+    def test_dictを使用して画像からキーポイント抽出を開始できること(self, requests_mock, make_client):
+        client = make_client()
+        image_id = 111
+        expected_keypoint_id = 222
+        requests_mock.post(
+            urljoin(client._api_url, "keypoints/"), json={"id": expected_keypoint_id}
+        )
+
+        data = {"image_id": image_id}
+        keypoint_id = client.extract_keypoint(data)
 
         assert keypoint_id == expected_keypoint_id
 
@@ -141,9 +154,18 @@ class TestExtractKeypoint(object):
             urljoin(client._api_url, "keypoints/"), json={"id": expected_keypoint_id}
         )
 
-        keypoint_id = client.extract_keypoint_from_movie(movie_id)
+        keypoint_id = client.extract_keypoint(movie_id=movie_id)
 
         assert keypoint_id == expected_keypoint_id
+
+    @pytest.mark.parametrize("args", [{}, {"image_id": 1, "movie_id": 2}])
+    def test_invalid_argument(self, requests_mock, make_client, args):
+        client = make_client()
+
+        with pytest.raises(ValueError) as excinfo:
+            client.extract_keypoint(**args)
+
+        assert str(excinfo.value) == "One of movie_id, image_id or data is required."
 
     def test_キーポイント抽出を完了できること(self, requests_mock, make_client):
         client = make_client()
@@ -180,9 +202,10 @@ class TestDrawingKeypoint(object):
             json={"execStatus": "SUCCESS", "drawingUrl": expected_drawing_url},
         )
 
-        status, drawing_url = client.wait_for_drawing(drawing_id)
+        response = client.wait_for_drawing(drawing_id)
+        (drawing_url,) = response.get("drawingUrl")
 
-        assert status == "SUCCESS"
+        assert response.status == "SUCCESS"
         assert drawing_url == expected_drawing_url
 
 
@@ -249,33 +272,6 @@ class TestDownload(object):
         client.download(drawing_id, path)
 
         assert not path.exists()
-
-
-@pytest.mark.parametrize("image_id, movie_id", [(3, None), (None, 4)])
-def test_get_name_from_drawing_id(requests_mock, make_client, image_id, movie_id):
-    client = make_client()
-    drawing_id = 1
-    keypoint_id = 2
-    expected = "file_name"
-
-    requests_mock.get(
-        f"{client._api_url}drawings/{drawing_id}/",
-        json={"execStatus": "SUCCESS", "keypoint": keypoint_id},
-    )
-    requests_mock.get(
-        f"{client._api_url}keypoints/{keypoint_id}/",
-        json={"execStatus": "SUCCESS", "image": image_id, "movie": movie_id},
-    )
-    requests_mock.get(
-        f"{client._api_url}images/{image_id}/", json={"name": expected},
-    )
-    requests_mock.get(
-        f"{client._api_url}movies/{movie_id}/", json={"name": expected},
-    )
-
-    name = client.get_name_from_drawing_id(drawing_id)
-
-    assert name == expected
 
 
 class TestWaitForDone(object):

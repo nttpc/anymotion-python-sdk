@@ -10,15 +10,12 @@ from .response import Response
 from .session import HttpSession
 from .utils import create_md5, get_media_type
 
-MOVIE_SUFFIXES = [".mp4", ".mov"]
-IMAGE_SUFFIXES = [".jpg", ".jpeg", ".png"]
-
 
 class Client(object):
     """API Client for the AnyMotion API.
 
     Attributes:
-        token (str): access token for authentication.
+        token (str): The access token for authentication.
         session (HttpSession)
 
     Examples:
@@ -34,10 +31,21 @@ class Client(object):
         api_url: str = os.getenv(
             "ANYMOTION_API_URL", "https://api.customer.jp/anymotion/v1/"
         ),
-        interval: float = 5.0,
-        timeout: float = 600.0,
+        interval: Union[int, float] = 5,
+        timeout: Union[int, float] = 600,
     ):
         """Initialize the client.
+
+        Args:
+            client_id: The value used for authentication.
+            client_secret: The value used for authentication.
+            api_url: The AnyMotion API URL to request.
+            interval: The request interval time(sec).
+            timeout: The request timeout period(sec).
+
+        Note:
+            If client_id, client_secret and api_url are not set, the environment
+            variables is used.
 
         Raises
             ClientValueError: Invalid argument value.
@@ -45,11 +53,11 @@ class Client(object):
         self.session = HttpSession()
 
         if client_id is None or client_id == "":
-            raise ClientValueError(f"Invalid Client ID: {client_id}")
+            raise ClientValueError(f"Client ID is not set.")
         self.client_id = client_id
 
         if client_secret is None or client_secret == "":
-            raise ClientValueError(f"Invalid Client Secret: {client_secret}")
+            raise ClientValueError(f"Client Secret is not set.")
         self.client_secret = client_secret
 
         parts = urlparse(api_url)
@@ -148,27 +156,62 @@ class Client(object):
 
         return media_id, media_type
 
-    def extract_keypoint_from_image(self, image_id: int) -> int:
-        """Start keypoint extraction for image_id.
+    def download(self, drawing_id: int, path: Path) -> None:
+        """Download file from drawing_id.
+
+        Args:
+            drawing_id
+            path: output path.
+
+        Raises:
+            RequestsError: HTTP request fails.
+        """
+        # TODO: not exists path check
+        data = self.get_one_data("drawings", drawing_id)
+        url = data.get("drawingUrl")
+        if url is None:
+            # TODO: add message
+            return
+
+        response = self.session.request(url)
+        with path.open("wb") as f:
+            f.write(response.content)
+
+    def extract_keypoint(
+        self,
+        data: Optional[dict] = None,
+        image_id: Optional[int] = None,
+        movie_id: Optional[int] = None,
+    ) -> int:
+        """Start keypoint extraction.
+
+        Args:
+            image_id
+            movie_id
+            data: example: {"image_id": 1} or {"movie_id: 2}
+
+        Note:
+            One of movie_id, image_id or data is required.
 
         Returns:
             keypoint_id.
 
         Raises:
+            ValueError: Invalid argument.
             RequestsError: HTTP request fails.
         """
-        return self._extract_keypoint({"image_id": image_id})
+        if [movie_id, image_id, data].count(None) != 2:
+            raise ValueError("One of movie_id, image_id or data is required.")
 
-    def extract_keypoint_from_movie(self, movie_id: int) -> int:
-        """Start keypoint extraction for movie_id.
+        if movie_id:
+            data = {"movie_id": movie_id}
+        if image_id:
+            data = {"image_id": image_id}
 
-        Returns:
-            keypoint_id.
-
-        Raises:
-            RequestsError: HTTP request fails.
-        """
-        return self._extract_keypoint({"movie_id": movie_id})
+        url = urljoin(self._api_url, "keypoints/")
+        response = self.session.request(url, method="POST", json=data, token=self.token)
+        (keypoint_id,) = Response(response).get("id")
+        return keypoint_id
 
     def draw_keypoint(
         self, keypoint_id: int, rule: Optional[Union[list, dict]] = None
@@ -216,7 +259,7 @@ class Client(object):
         response = self._wait_for_done(url)
         return response
 
-    def wait_for_drawing(self, drawing_id: int) -> Tuple[str, Optional[str]]:
+    def wait_for_drawing(self, drawing_id: int) -> Response:
         """Wait for drawing.
 
         Raises:
@@ -224,11 +267,7 @@ class Client(object):
         """
         url = urljoin(self._api_url, f"drawings/{drawing_id}/")
         response = self._wait_for_done(url)
-        drawing_url = None
-        if response.status == "SUCCESS":
-            (drawing_url,) = response.get("drawingUrl")
-        # TODO: return response only
-        return response.status, drawing_url
+        return response
 
     def wait_for_analysis(self, analysis_id: int) -> Response:
         """Wait for analysis.
@@ -239,60 +278,6 @@ class Client(object):
         url = urljoin(self._api_url, f"analyses/{analysis_id}/")
         response = self._wait_for_done(url)
         return response
-
-    def download(self, drawing_id: int, path: Path) -> None:
-        """Download file from drawing_id.
-
-        Args:
-            drawing_id
-            path: output path.
-
-        Raises:
-            RequestsError: HTTP request fails.
-        """
-        # TODO: not exists path check
-        data = self.get_one_data("drawings", drawing_id)
-        url = data.get("drawingUrl")
-        if url is None:
-            # TODO: add message
-            return
-
-        response = self.session.request(url)
-        with path.open("wb") as f:
-            f.write(response.content)
-
-    # TODO: move cli method
-    def get_name_from_drawing_id(self, drawing_id: int) -> str:
-        """Get image or movie name from drawing_id.
-
-        Raises:
-            RequestsError: HTTP request fails.
-        """
-        url = urljoin(self._api_url, f"drawings/{drawing_id}/")
-        response = self.session.request(url, token=self.token)
-        (keypoint_id,) = Response(response).get("keypoint")
-
-        url = urljoin(self._api_url, f"keypoints/{keypoint_id}/")
-        response = self.session.request(url, token=self.token)
-        (image_id, movie_id) = Response(response).get(("image", "movie"))
-
-        if image_id:
-            url = urljoin(self._api_url, f"images/{image_id}/")
-        elif movie_id:
-            url = urljoin(self._api_url, f"movies/{movie_id}/")
-        else:
-            raise
-        response = self.session.request(url, token=self.token)
-        (name,) = Response(response).get("name")
-
-        return name
-
-    def _extract_keypoint(self, data: dict) -> int:
-        """Start keypoint extraction."""
-        url = urljoin(self._api_url, "keypoints/")
-        response = self.session.request(url, method="POST", json=data, token=self.token)
-        (keypoint_id,) = Response(response).get("id")
-        return keypoint_id
 
     def _wait_for_done(self, url: str) -> Response:
         for _ in range(self._max_steps):

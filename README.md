@@ -24,8 +24,18 @@ extra-index-url = https://pypi.anymotion.jp
 ```py
 from encore_sdk import Client
 
-client = Client()
-client.get_one_data("images", 1)
+# Setup client
+client = Client(client_id="your_client_id", client_secret="your_client_secret")
+
+# Upload image file
+image_id, _ = client.upload("image.jpg")
+
+# Extract keypoint
+keypoint_id = client.extract_keypoint(image_id=image_id)
+client.wait_for_extraction(keypoint_id)
+
+# Get keypoint data
+client.get_one_data("keypoints", keypoint_id)
 ```
 
 ## Change Log
