@@ -1,4 +1,3 @@
-from pathlib import Path
 from urllib.parse import urljoin
 
 import pytest
@@ -108,7 +107,7 @@ class TestUpload(object):
         )
         requests_mock.put(upload_url)
 
-        media_id, media_type = client.upload_to_s3(path)
+        media_id, media_type = client.upload(path)
 
         assert media_id == expected_media_id
         assert media_type == expected_media_type
@@ -118,7 +117,7 @@ class TestUpload(object):
         path = "test.text"
 
         with pytest.raises(FileTypeError):
-            client.upload_to_s3(path)
+            client.upload(path)
 
 
 class TestExtractKeypoint(object):
@@ -214,19 +213,42 @@ class TestAnalysisKeypoint(object):
         assert response.status == "SUCCESS"
 
 
-def test_ファイルをダウンロードできること(mocker, requests_mock, make_client, tmpdir):
-    client = make_client()
-    url = "http://download.example.com/image.jpg"
-    path = Path(tmpdir) / "image.jpg"
+class TestDownload(object):
+    def test_download_ok(self, tmp_path, requests_mock, make_client):
+        client = make_client()
+        drawing_id = 111
+        url = "http://download.example.com/image.jpg"
+        path = tmp_path / "image.jpg"
 
-    requests_mock.get(url, content=b"image data")
-    mocker.patch("pathlib.Path.mkdir", mocker.MagicMock())
+        requests_mock.get(
+            f"{client._api_url}drawings/{drawing_id}/",
+            json={"execStatus": "SUCCESS", "drawingUrl": url},
+        )
+        requests_mock.get(url, content=b"image data")
 
-    assert not path.exists()
+        assert not path.exists()
 
-    client.download(url, path)
+        client.download(drawing_id, path)
 
-    assert path.exists()
+        assert path.exists()
+
+    def test_download_skip(self, tmp_path, requests_mock, make_client):
+        client = make_client()
+        drawing_id = 111
+        url = "http://download.example.com/image.jpg"
+        path = tmp_path / "image.jpg"
+
+        requests_mock.get(
+            f"{client._api_url}drawings/{drawing_id}/",
+            json={"execStatus": "FAILURE", "drawingUrl": None},
+        )
+        requests_mock.get(url, content=b"image data")
+
+        assert not path.exists()
+
+        client.download(drawing_id, path)
+
+        assert not path.exists()
 
 
 @pytest.mark.parametrize("image_id, movie_id", [(3, None), (None, 4)])

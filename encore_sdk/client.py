@@ -1,5 +1,3 @@
-import base64
-import hashlib
 import os
 import time
 from pathlib import Path
@@ -7,9 +5,10 @@ from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 
 from .auth import get_token
-from .exceptions import ClientValueError, FileTypeError
+from .exceptions import ClientValueError
 from .response import Response
 from .session import HttpSession
+from .utils import create_md5, get_media_type
 
 MOVIE_SUFFIXES = [".mp4", ".mov"]
 IMAGE_SUFFIXES = [".jpg", ".jpeg", ".png"]
@@ -17,10 +16,6 @@ IMAGE_SUFFIXES = [".jpg", ".jpeg", ".png"]
 
 class Client(object):
     """API Client for the AnyMotion API.
-
-    All HTTP requests for the AnyMotion API (including Amazon S3) are handled by this
-    class.
-    The acquired data should not be displayed. Should be displayed for each command.
 
     Attributes:
         token (str): access token for authentication.
@@ -36,7 +31,9 @@ class Client(object):
         self,
         client_id: str = os.getenv("ANYMOTION_CLIENT_ID", ""),
         client_secret: str = os.getenv("ANYMOTION_CLIENT_SECRET", ""),
-        api_url: str = "https://api.customer.jp/anymotion/v1/",
+        api_url: str = os.getenv(
+            "ANYMOTION_API_URL", "https://api.customer.jp/anymotion/v1/"
+        ),
         interval: float = 5.0,
         timeout: float = 600.0,
     ):
@@ -108,8 +105,8 @@ class Client(object):
             data += sub_data
         return data
 
-    def upload_to_s3(self, path: Union[str, Path]) -> Tuple[int, str]:
-        """Upload movie or image to Amazon S3.
+    def upload(self, path: Union[str, Path]) -> Tuple[int, str]:
+        """Upload movie or image to the cloud storage.
 
         Args:
             path: The path of the file to upload.
@@ -125,8 +122,8 @@ class Client(object):
         if isinstance(path, str):
             path = Path(path)
 
-        media_type = self._get_media_type(path)
-        content_md5 = self._create_md5(path)
+        media_type = get_media_type(path)
+        content_md5 = create_md5(path)
 
         # Register movie or image
         response = self.session.request(
@@ -141,7 +138,7 @@ class Client(object):
         )
         media_id, upload_url = Response(response).get(("id", "uploadUrl"))
 
-        # Upload to S3
+        # Upload to the cloud storage
         self.session.request(
             upload_url,
             method="PUT",
@@ -196,7 +193,7 @@ class Client(object):
         """Start analyze for keypoint_id.
 
         Returns:
-            drawing_id.
+            analysis_id.
 
         Raises:
             RequestsError: HTTP request fails.
@@ -243,16 +240,28 @@ class Client(object):
         response = self._wait_for_done(url)
         return response
 
-    def download(self, url: str, path: Path) -> None:
-        """Download file from url.
+    def download(self, drawing_id: int, path: Path) -> None:
+        """Download file from drawing_id.
+
+        Args:
+            drawing_id
+            path: output path.
 
         Raises:
             RequestsError: HTTP request fails.
         """
+        # TODO: not exists path check
+        data = self.get_one_data("drawings", drawing_id)
+        url = data.get("drawingUrl")
+        if url is None:
+            # TODO: add message
+            return
+
         response = self.session.request(url)
         with path.open("wb") as f:
             f.write(response.content)
 
+    # TODO: move cli method
     def get_name_from_drawing_id(self, drawing_id: int) -> str:
         """Get image or movie name from drawing_id.
 
@@ -278,32 +287,12 @@ class Client(object):
 
         return name
 
-    def _create_md5(self, path: Path) -> str:
-        with path.open("rb") as f:
-            md5 = hashlib.md5(f.read()).digest()
-            encoded_content_md5 = base64.b64encode(md5)
-            content_md5 = encoded_content_md5.decode()
-        return content_md5
-
     def _extract_keypoint(self, data: dict) -> int:
         """Start keypoint extraction."""
         url = urljoin(self._api_url, "keypoints/")
         response = self.session.request(url, method="POST", json=data, token=self.token)
         (keypoint_id,) = Response(response).get("id")
         return keypoint_id
-
-    def _get_media_type(self, path: Path) -> str:
-        if path.suffix.lower() in MOVIE_SUFFIXES:
-            return "movie"
-        elif path.suffix.lower() in IMAGE_SUFFIXES:
-            return "image"
-        else:
-            suffix = MOVIE_SUFFIXES + IMAGE_SUFFIXES
-            message = (
-                f"The extension of the file {path} must be"
-                f"{', '.join(suffix[:-1])} or {suffix[-1]}."
-            )
-            raise FileTypeError(message)
 
     def _wait_for_done(self, url: str) -> Response:
         for _ in range(self._max_steps):
