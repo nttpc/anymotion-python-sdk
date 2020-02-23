@@ -1,6 +1,7 @@
 import os
 import time
 from collections import namedtuple
+from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse
@@ -11,6 +12,7 @@ from .response import Result
 from .session import HttpSession
 from .utils import create_md5, get_media_type
 
+logger = getLogger(__name__)
 UploadResult = namedtuple("UploadResult", ("image_id", "movie_id"))
 
 
@@ -53,6 +55,8 @@ class Client(object):
         Raises
             ClientValueError: Invalid argument value.
         """
+        logger.debug("Initializing client.")
+
         self.session = HttpSession()
 
         if client_id is None or client_id == "":
@@ -92,7 +96,7 @@ class Client(object):
         return self._token
 
     def get_one_data(self, endpoint: str, endpoint_id: int) -> dict:
-        """Get one piece of data using AnyMotion API.
+        """Get one piece of data.
 
         Args:
             endpoint: images, movies, keypoints, drawings, or analyses
@@ -108,8 +112,28 @@ class Client(object):
         response = self.session.request(url, token=self.token)
         return response.json
 
+    def get_image(self, image_id: int) -> dict:
+        """Get image data."""
+        return self.get_one_data("images", image_id)
+
+    def get_movie(self, movie_id: int) -> dict:
+        """Get movie data."""
+        return self.get_one_data("movies", movie_id)
+
+    def get_keypoint(self, keypoint_id: int) -> dict:
+        """Get keypoint data."""
+        return self.get_one_data("keypoints", keypoint_id)
+
+    def get_drawing(self, drawing_id: int) -> dict:
+        """Get drawing data."""
+        return self.get_one_data("drawings", drawing_id)
+
+    def get_analysis(self, analysis_id: int) -> dict:
+        """Get analysis data."""
+        return self.get_one_data("analyses", analysis_id)
+
     def get_list_data(self, endpoint: str, params: dict = {}) -> List[dict]:
-        """Get list data using AnyMotion API.
+        """Get list data.
 
         Raises:
             RequestsError: HTTP request fails.
@@ -123,9 +147,27 @@ class Client(object):
             data += sub_data
         return data
 
-    def upload(
-        self, path: Union[str, Path], text: str = "Created by encore-sdk."
-    ) -> UploadResult:
+    def get_images(self, params: dict = {}) -> List[dict]:
+        """Get image list."""
+        return self.get_list_data("images", params=params)
+
+    def get_movies(self, params: dict = {}) -> List[dict]:
+        """Get movie data."""
+        return self.get_list_data("movies", params=params)
+
+    def get_keypoints(self, params: dict = {}) -> List[dict]:
+        """Get keypoint data."""
+        return self.get_list_data("keypoints", params=params)
+
+    def get_drawings(self, params: dict = {}) -> List[dict]:
+        """Get drawing data."""
+        return self.get_list_data("drawings", params=params)
+
+    def get_analyses(self, params: dict = {}) -> List[dict]:
+        """Get analysis list."""
+        return self.get_list_data("analyses", params=params)
+
+    def upload(self, path: Union[str, Path], text: str = "") -> UploadResult:
         """Upload movie or image to the cloud storage.
 
         Args:
@@ -170,21 +212,30 @@ class Client(object):
         else:
             return UploadResult(image_id=None, movie_id=media_id)
 
-    def download(self, drawing_id: int, path: Path) -> None:
+    def download(self, drawing_id: int, path: Union[str, Path], exist_ok=False) -> None:
         """Download file from drawing_id.
 
         Args:
             drawing_id
-            path: output path.
+            path: output file path.
+            exist_ok: if false (default), FileExistsError is raised if the target file
+                already exists.
 
         Raises:
+            FileExistsError
             RequestsError: HTTP request fails.
         """
-        # TODO: not exists path check
+        if isinstance(path, str):
+            path = Path(path)
+        path = path.expanduser()
+
+        if path.exists() and not exist_ok:
+            raise FileExistsError(f"File exists: {path}")
+
         data = self.get_one_data("drawings", drawing_id)
         url = data.get("drawingUrl")
         if url is None:
-            # TODO: add message
+            logger.warning("Skip download because there is no drawing url.")
             return
 
         response = self.session.request(url)

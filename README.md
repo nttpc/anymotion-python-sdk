@@ -32,10 +32,10 @@ upload_result = client.upload("image.jpg")
 
 # Extract keypoint
 keypoint_id = client.extract_keypoint(image_id=upload_result.image_id)
-result = client.wait_for_extraction(keypoint_id)
+extraction_result = client.wait_for_extraction(keypoint_id)
 
 # Get keypoint data from result
-keypoint = result.json
+keypoint = extraction_result.json
 
 # Get keypoint data from keypoint_id
 keypoint = client.get_keypoint(keypoint_id)

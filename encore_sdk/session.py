@@ -1,4 +1,5 @@
 from collections import deque
+from logging import getLogger
 from textwrap import dedent
 from typing import Any, Callable, List, Optional
 
@@ -6,6 +7,8 @@ import requests
 
 from .exceptions import RequestsError
 from .response import HttpResponse
+
+logger = getLogger(__name__)
 
 
 class HttpSession(object):
@@ -48,16 +51,26 @@ class HttpSession(object):
         request = requests.Request(
             method, url, params=params, data=data, json=json, headers=headers,
         )
+        prepped = request.prepare()
+
+        logger.debug(f"Sending http request: {prepped}")
+        logger.debug(f"{prepped.method} {prepped.url}")
+        logger.debug(f"Request headers: {prepped.headers}")
+        logger.debug(f"Request body: {prepped.body}")
+
         self.request_histories.append(request)
         for callback in self.request_callbacks:
             callback(request)
-        prepped = request.prepare()
 
         try:
             response = self.session.send(prepped)
         except requests.ConnectionError:
             self.request_histories.pop()
             raise RequestsError(f"{method} {url} is failed.")
+
+        logger.debug(f"Received http response: {response}")
+        logger.debug(f"Response headers: {response.headers}")
+        logger.debug(f"Response body: {response.text}")
 
         self.response_histories.append(response)
         for callback in self.response_callbacks:

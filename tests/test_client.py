@@ -66,6 +66,26 @@ class TestGetData(object):
 
         assert result == data
 
+    def test_get_image(self, requests_mock, make_client):
+        client = make_client()
+        data = {"id": 1, "name": "image"}
+        requests_mock.get(
+            f"{client._api_url}images/1/", json=data,
+        )
+        result = client.get_image(1)
+
+        assert result == data
+
+    def test_get_movie(self, requests_mock, make_client):
+        client = make_client()
+        data = {"id": 1, "name": "movie"}
+        requests_mock.get(
+            f"{client._api_url}movies/1/", json=data,
+        )
+        result = client.get_movie(1)
+
+        assert result == data
+
     def test_get_list_data(self, requests_mock, make_client):
         client = make_client()
         data = [{"id": 1, "name": "image"}, {"id": 2, "name": "image"}]
@@ -74,6 +94,28 @@ class TestGetData(object):
             json={"next": None, "previous": None, "maxPage": 1, "data": data},
         )
         result = client.get_list_data("images")
+
+        assert result == data
+
+    def test_get_images(self, requests_mock, make_client):
+        client = make_client()
+        data = [{"id": 1, "name": "image"}, {"id": 2, "name": "image"}]
+        requests_mock.get(
+            f"{client._api_url}images/",
+            json={"next": None, "previous": None, "maxPage": 1, "data": data},
+        )
+        result = client.get_images()
+
+        assert result == data
+
+    def test_get_movies(self, requests_mock, make_client):
+        client = make_client()
+        data = [{"id": 1, "name": "movie"}, {"id": 2, "name": "movie"}]
+        requests_mock.get(
+            f"{client._api_url}movies/",
+            json={"next": None, "previous": None, "maxPage": 1, "data": data},
+        )
+        result = client.get_movies()
 
         assert result == data
 
