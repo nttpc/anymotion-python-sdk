@@ -10,7 +10,6 @@ IMAGE_SUFFIXES = [".jpg", ".jpeg", ".png"]
 
 def create_md5(path: Path) -> str:
     """Create MD5 from file."""
-    # TODO: file check
     with path.open("rb") as f:
         md5 = hashlib.md5(f.read()).digest()
         encoded_content_md5 = base64.b64encode(md5)

@@ -1,7 +1,6 @@
 from typing import Optional
 from urllib.parse import urljoin
 
-from .response import Response
 from .session import HttpSession
 
 
@@ -14,13 +13,10 @@ def get_token(
     """Get a token using client ID and secret."""
     oauth_url = urljoin(base_url, "v1/oauth/accesstokens")
     session = session or HttpSession()
-
     data = {
         "grantType": "client_credentials",
         "clientId": client_id,
         "clientSecret": client_secret,
     }
     response = session.request(oauth_url, method="POST", json=data)
-    (token,) = Response(response).get("accessToken")
-
-    return token
+    return response.get("accessToken")

@@ -107,10 +107,14 @@ class TestUpload(object):
         )
         requests_mock.put(upload_url)
 
-        media_id, media_type = client.upload(path)
+        result = client.upload(path)
 
-        assert media_id == expected_media_id
-        assert media_type == expected_media_type
+        if expected_media_type == "image":
+            assert result.image_id == expected_media_id
+            assert result.movie_id is None
+        else:
+            assert result.image_id is None
+            assert result.movie_id == expected_media_id
 
     def test_正しい拡張子でない場合アップロードできないこと(self, make_client):
         client = make_client()
@@ -203,7 +207,7 @@ class TestDrawingKeypoint(object):
         )
 
         response = client.wait_for_drawing(drawing_id)
-        (drawing_url,) = response.get("drawingUrl")
+        drawing_url = response.get("drawingUrl")
 
         assert response.status == "SUCCESS"
         assert drawing_url == expected_drawing_url

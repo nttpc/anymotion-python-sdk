@@ -1,14 +1,17 @@
 import os
 import time
+from collections import namedtuple
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 
 from .auth import get_token
 from .exceptions import ClientValueError
-from .response import Response
+from .response import Result
 from .session import HttpSession
 from .utils import create_md5, get_media_type
+
+UploadResult = namedtuple("UploadResult", ("image_id", "movie_id"))
 
 
 class Client(object):
@@ -20,8 +23,8 @@ class Client(object):
 
     Examples:
         >>> client = Client()
-        >>> client.get_one_data("images", 1)
-        {'id': 1, 'name': None, 'contentMd5': '/vtARXU7pPhu/8qJaV+Ahw=='}
+        >>> client.get_image(1)
+        {'id': 1, 'name': 'sample', 'contentMd5': '/vtARXU7pPhu/8qJaV+Ahw=='}
     """
 
     def __init__(
@@ -89,17 +92,24 @@ class Client(object):
         return self._token
 
     def get_one_data(self, endpoint: str, endpoint_id: int) -> dict:
-        """Get one piece of data from AnyMotion API.
+        """Get one piece of data using AnyMotion API.
+
+        Args:
+            endpoint: images, movies, keypoints, drawings, or analyses
+            endpoint_id
+
+        Returns:
+            API response data.
 
         Raises:
             RequestsError: HTTP request fails.
         """
         url = urljoin(self._api_url, f"{endpoint}/{endpoint_id}/")
         response = self.session.request(url, token=self.token)
-        return response.json()
+        return response.json
 
     def get_list_data(self, endpoint: str, params: dict = {}) -> List[dict]:
-        """Get list data from AnyMotion API.
+        """Get list data using AnyMotion API.
 
         Raises:
             RequestsError: HTTP request fails.
@@ -109,26 +119,31 @@ class Client(object):
         data: List[dict] = []
         while url:
             response = self.session.request(url, params=params, token=self.token)
-            sub_data, url = Response(response).get(("data", "next"))
+            sub_data, url = response.get(("data", "next"))
             data += sub_data
         return data
 
-    def upload(self, path: Union[str, Path]) -> Tuple[int, str]:
+    def upload(
+        self, path: Union[str, Path], text: str = "Created by encore-sdk."
+    ) -> UploadResult:
         """Upload movie or image to the cloud storage.
 
         Args:
             path: The path of the file to upload.
+            text: The text about this file.
 
         Returns:
             A tuple of media_id and media_type. media_id is the created image_id or
             movie_id. media_type is the string of "image" or "movie".
 
         Raises:
+            FileNotFoundError: No such file
             FileTypeError: Invalid file types.
             RequestsError: HTTP request fails.
         """
         if isinstance(path, str):
             path = Path(path)
+        path = path.expanduser()
 
         media_type = get_media_type(path)
         content_md5 = create_md5(path)
@@ -137,14 +152,10 @@ class Client(object):
         response = self.session.request(
             urljoin(self._api_url, f"{media_type}s/"),
             method="POST",
-            json={
-                "origin_key": path.name,
-                "content_md5": content_md5,
-                "name": path.stem,
-            },
+            json={"content_md5": content_md5, "name": path.stem, "text": text},
             token=self.token,
         )
-        media_id, upload_url = Response(response).get(("id", "uploadUrl"))
+        media_id, upload_url = response.get(("id", "uploadUrl"))
 
         # Upload to the cloud storage
         self.session.request(
@@ -154,7 +165,10 @@ class Client(object):
             headers={"Content-MD5": content_md5},
         )
 
-        return media_id, media_type
+        if media_type == "image":
+            return UploadResult(image_id=media_id, movie_id=None)
+        else:
+            return UploadResult(image_id=None, movie_id=media_id)
 
     def download(self, drawing_id: int, path: Path) -> None:
         """Download file from drawing_id.
@@ -175,7 +189,7 @@ class Client(object):
 
         response = self.session.request(url)
         with path.open("wb") as f:
-            f.write(response.content)
+            f.write(response.raw.content)
 
     def extract_keypoint(
         self,
@@ -210,8 +224,7 @@ class Client(object):
 
         url = urljoin(self._api_url, "keypoints/")
         response = self.session.request(url, method="POST", json=data, token=self.token)
-        (keypoint_id,) = Response(response).get("id")
-        return keypoint_id
+        return response.get("id")
 
     def draw_keypoint(
         self, keypoint_id: int, rule: Optional[Union[list, dict]] = None
@@ -229,8 +242,7 @@ class Client(object):
         if rule is not None:
             json["rule"] = rule
         response = self.session.request(url, method="POST", json=json, token=self.token)
-        (drawing_id,) = Response(response).get("id")
-        return drawing_id
+        return response.get("id")
 
     def analyze_keypoint(self, keypoint_id: int, rule: Union[list, dict]) -> int:
         """Start analyze for keypoint_id.
@@ -246,45 +258,42 @@ class Client(object):
         if rule is not None:
             json["rule"] = rule
         response = self.session.request(url, method="POST", json=json, token=self.token)
-        (analysis_id,) = Response(response).get("id")
-        return analysis_id
+        return response.get("id")
 
-    def wait_for_extraction(self, keypoint_id: int) -> Response:
+    def wait_for_extraction(self, keypoint_id: int) -> Result:
         """Wait for extraction.
 
         Raises:
             RequestsError: HTTP request fails.
         """
         url = urljoin(self._api_url, f"keypoints/{keypoint_id}/")
-        response = self._wait_for_done(url)
-        return response
+        return self._wait_for_done(url)
 
-    def wait_for_drawing(self, drawing_id: int) -> Response:
+    def wait_for_drawing(self, drawing_id: int) -> Result:
         """Wait for drawing.
 
         Raises:
             RequestsError: HTTP request fails.
         """
         url = urljoin(self._api_url, f"drawings/{drawing_id}/")
-        response = self._wait_for_done(url)
-        return response
+        return self._wait_for_done(url)
 
-    def wait_for_analysis(self, analysis_id: int) -> Response:
+    def wait_for_analysis(self, analysis_id: int) -> Result:
         """Wait for analysis.
 
         Raises:
             RequestsError: HTTP request fails.
         """
         url = urljoin(self._api_url, f"analyses/{analysis_id}/")
-        response = self._wait_for_done(url)
-        return response
+        return self._wait_for_done(url)
 
-    def _wait_for_done(self, url: str) -> Response:
+    def _wait_for_done(self, url: str) -> Result:
         for _ in range(self._max_steps):
-            response = Response(self.session.request(url, token=self.token))
-            if response.status in ["SUCCESS", "FAILURE"]:
+            response = self.session.request(url, token=self.token)
+            result = Result(response.raw)
+            if result.status in ["SUCCESS", "FAILURE"]:
                 break
             time.sleep(self._interval)
         else:
-            response.status = "TIMEOUT"
-        return response
+            result.status = "TIMEOUT"
+        return result

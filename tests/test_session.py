@@ -2,6 +2,7 @@ import pytest
 import requests
 
 from encore_sdk import RequestsError
+from encore_sdk.response import HttpResponse
 from encore_sdk.session import HttpSession
 
 
@@ -16,9 +17,9 @@ class TestSession(object):
         session = HttpSession()
         response = session.request(url, token=token)
 
-        assert isinstance(response, requests.Response)
-        assert response.status_code == 200
-        assert response.json() == data
+        assert isinstance(response, HttpResponse)
+        assert response.raw.status_code == 200
+        assert response.json == data
         assert requests_mock.call_count == 1
 
     def test_request_post(self, requests_mock):
@@ -30,9 +31,9 @@ class TestSession(object):
         session = HttpSession()
         response = session.request(url, "POST", json={"name": "image"})
 
-        assert isinstance(response, requests.Response)
-        assert response.status_code == 200
-        assert response.json() == data
+        assert isinstance(response, HttpResponse)
+        assert response.raw.status_code == 200
+        assert response.json == data
         assert requests_mock.call_count == 1
 
     def test_add_request_callback(self, capfd, requests_mock):
@@ -48,9 +49,9 @@ class TestSession(object):
         session.add_request_callback(f)
         response = session.request(url)
 
-        assert isinstance(response, requests.Response)
-        assert response.status_code == 200
-        assert response.json() == data
+        assert isinstance(response, HttpResponse)
+        assert response.raw.status_code == 200
+        assert response.json == data
         assert requests_mock.call_count == 1
 
         out, err = capfd.readouterr()
@@ -70,9 +71,9 @@ class TestSession(object):
         session.add_response_callback(f)
         response = session.request(url)
 
-        assert isinstance(response, requests.Response)
-        assert response.status_code == 200
-        assert response.json() == data
+        assert isinstance(response, HttpResponse)
+        assert response.raw.status_code == 200
+        assert response.json == data
         assert requests_mock.call_count == 1
 
         out, err = capfd.readouterr()
