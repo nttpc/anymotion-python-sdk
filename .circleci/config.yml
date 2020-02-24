@@ -1,0 +1,178 @@
+version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.5
+  aws-cli: circleci/aws-cli@0.1.19
+
+executors:
+  python:
+    parameters:
+      version:
+        type: string
+        default: "3.8"
+    docker:
+      - image: circleci/python:<< parameters.version >>
+
+commands:
+  setup_python:
+    parameters:
+      version:
+        type: string
+        default: "3.8"
+    steps:
+      - restore_cache:
+          keys:
+            - deps-<< parameters.version >>-{{ checksum "poetry.lock" }}
+      - run:
+          name: Install python packages
+          command: poetry install
+      - save_cache:
+          key: deps-<< parameters.version >>-{{ checksum "poetry.lock" }}
+          paths:
+            - /home/circleci/.cache/pypoetry/virtualenvs
+
+jobs:
+  py38-setup:
+    executor:
+      name: python
+    steps:
+      - checkout
+      - setup_python
+
+  test:
+    parameters:
+      version:
+        type: string
+        default: "3.8"
+    executor:
+      name: python
+      version: << parameters.version >>
+    steps:
+      - checkout
+      - setup_python:
+          version: << parameters.version >>
+      - run:
+          name: Run test with pytest
+          command: |
+            mkdir test-reports
+            poetry run pytest -v --junitxml=test-reports/junit.xml
+      - store_test_results:
+          path: test-reports
+
+  measure-coverage:
+    executor:
+      name: python
+    steps:
+      - checkout
+      - setup_python
+      - run:
+          name: Run unit test with pytest
+          command: poetry run pytest --cov --cov-report=xml
+      - codecov/upload
+
+  check-lint:
+    executor:
+      name: python
+    steps:
+      - checkout
+      - setup_python
+      - run:
+          name: Lint with flake8
+          command: poetry run flake8
+      - run:
+          name: Lint with black
+          command: poetry run black . --check
+      - run:
+          name: Lint with mypy
+          command: poetry run mypy
+      - run:
+          name: Lint with isort
+          command: poetry run isort --check-only
+
+  check-security:
+    executor:
+      name: python
+    steps:
+      - checkout
+      - setup_python
+      - run:
+          name: Check security with bandit
+          command: poetry run bandit -r encore_api_cli -s B303
+
+  release:
+    executor:
+      name: python
+    steps:
+      - checkout
+      - setup_python
+      - run:
+          name: Build
+          command: poetry build
+      - run:
+          name: Distributing packages
+          command: poetry run s3pypi --bucket pypi.anymotion.jp --dist-path dist
+
+workflows:
+  workflow:
+    jobs:
+      - py38-setup:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          name: py36-test
+          filters:
+            tags:
+              only: /.*/
+          version: "3.6"
+      - test:
+          name: py37-test
+          filters:
+            tags:
+              only: /.*/
+          version: "3.7"
+      - test:
+          name: py38-test
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - py38-setup
+      - measure-coverage:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - py38-test
+      - check-lint:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - py38-setup
+      - check-security:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - py38-setup
+      - approval-release:
+          type: approval
+          filters:
+            tags:
+              only: /^\d.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - py36-test
+            - py37-test
+            - measure-coverage
+            - check-lint
+            - check-security
+      - release:
+          filters:
+            tags:
+              only: /^\d.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - approval-release
