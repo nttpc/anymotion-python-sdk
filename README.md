@@ -1,5 +1,7 @@
 # Encore SDK
 
+[![CircleCI][ci-status]][ci] [![codecov][codecov-status]][codecov]
+
 AnyMotion SDK for Python.
 
 ## Installation
@@ -44,3 +46,8 @@ keypoint = client.get_keypoint(keypoint_id)
 ## Change Log
 
 See [CHANGELOG.md](CHANGELOG.md).
+
+[ci]: https://circleci.com/bb/nttpc-datascience/encore-sdk
+[ci-status]: https://circleci.com/bb/nttpc-datascience/encore-sdk/tree/master.svg?style=shield&circle-token=9a0810fc3cbbd22d0a8b65c37045c5e6c5555e28
+[codecov]: https://codecov.io/bb/nttpc-datascience/encore-sdk
+[codecov-status]: https://codecov.io/bb/nttpc-datascience/encore-sdk/branch/master/graph/badge.svg?token=Q1CzYrpmAb
