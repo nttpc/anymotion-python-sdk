@@ -167,7 +167,9 @@ class Client(object):
         """Get analysis list."""
         return self.get_list_data("analyses", params=params)
 
-    def upload(self, path: Union[str, Path], text: str = "") -> UploadResult:
+    def upload(
+        self, path: Union[str, Path], text: Optional[str] = None
+    ) -> UploadResult:
         """Upload movie or image to the cloud storage.
 
         Args:
