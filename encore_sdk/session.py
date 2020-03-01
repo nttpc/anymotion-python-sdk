@@ -1,7 +1,7 @@
 from collections import deque
 from logging import getLogger
 from textwrap import dedent
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Union
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -17,7 +17,10 @@ class HttpSession(object):
     """Encapsulates a single HTTP request."""
 
     def __init__(
-        self, retry_total: int = 5, retry_backoff_factor=0.1, history_size: int = 10000
+        self,
+        retry_total: int = 5,
+        retry_backoff_factor: Union[int, float] = 0.1,
+        history_size: int = 10000,
     ):
         self.session = requests.Session()
 
@@ -31,8 +34,8 @@ class HttpSession(object):
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
 
-        self.request_histories = deque(maxlen=history_size)
-        self.response_histories = deque(maxlen=history_size)
+        self.request_histories: deque = deque(maxlen=history_size)
+        self.response_histories: deque = deque(maxlen=history_size)
 
         self.request_callbacks: List[Callable] = []
         self.response_callbacks: List[Callable] = []
