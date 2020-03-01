@@ -38,6 +38,7 @@ class Client(object):
         ),
         interval: Union[int, float] = 5,
         timeout: Union[int, float] = 600,
+        session: HttpSession = HttpSession(),
     ):
         """Initialize the client.
 
@@ -57,7 +58,11 @@ class Client(object):
         """
         logger.debug("Initializing client.")
 
-        self.session = HttpSession()
+        if not isinstance(session, HttpSession):
+            raise ClientValueError(
+                f"session is must be HttpSession class: {type(session)}"
+            )
+        self.session = session
 
         if client_id is None or client_id == "":
             raise ClientValueError(f"Client ID is not set.")

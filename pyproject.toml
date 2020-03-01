@@ -1,10 +1,9 @@
 [tool.poetry]
 name = "encore-sdk"
-version = "0.1.1"
+version = "0.2.dev0"
 description = "AnyMotion SDK for Python"
 authors = ["Yusuke Kumihashi <y_kumiha@nttpc.co.jp>"]
 repository = "https://bitbucket.org/nttpc-datascience/encore-sdk/"
-include = ["CHANGELOG.md"]
 classifiers = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",

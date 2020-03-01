@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.0
+
+Unreleased
+
+- Added to retry when server error occurs in HTTP request.
+
 ## 0.1.1
 
 2020-02-28

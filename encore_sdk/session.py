@@ -4,6 +4,8 @@ from textwrap import dedent
 from typing import Any, Callable, List, Optional
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from .exceptions import RequestsError
 from .response import HttpResponse
@@ -14,8 +16,20 @@ logger = getLogger(__name__)
 class HttpSession(object):
     """Encapsulates a single HTTP request."""
 
-    def __init__(self, history_size=10000):
+    def __init__(
+        self, retry_total: int = 5, retry_backoff_factor=0.1, history_size: int = 10000
+    ):
         self.session = requests.Session()
+
+        retries = Retry(
+            total=retry_total,
+            backoff_factor=retry_backoff_factor,
+            status_forcelist=[500, 502, 503, 504],
+            raise_on_status=False,
+        )
+        adapter = HTTPAdapter(max_retries=retries)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
 
         self.request_histories = deque(maxlen=history_size)
         self.response_histories = deque(maxlen=history_size)
