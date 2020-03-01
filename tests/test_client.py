@@ -4,6 +4,7 @@ import pytest
 
 from encore_sdk.client import Client
 from encore_sdk.exceptions import ClientValueError, FileTypeError
+from encore_sdk.session import HttpSession
 
 
 @pytest.fixture
@@ -14,8 +15,9 @@ def make_client(requests_mock):
         api_url="http://api.example.com/anymotion/v1/",
         interval=5,
         timeout=600,
+        session=HttpSession(),
     ):
-        client = Client("client_id", "client_secret", api_url, interval, timeout)
+        client = Client(client_id, client_secret, api_url, interval, timeout, session)
         oauth_url = urljoin(client._base_url, "v1/oauth/accesstokens")
         requests_mock.post(oauth_url, json={"accessToken": "token"})
         return client
@@ -35,22 +37,21 @@ class TestInit(object):
         assert client._api_url == "http://api.example.com/anymotion/v1/"
 
     @pytest.mark.parametrize(
-        "client_id, client_secret, api_url, expected",
+        "args, expected",
         [
-            ("", "", "", "Client ID is not set."),
-            ("client_id", "", "", "Client Secret is not set."),
-            ("client_id", "client_secret", "", "Invalid API URL: "),
+            ({"client_id": ""}, "Client ID is not set."),
+            ({"client_secret": ""}, "Client Secret is not set."),
+            ({"api_url": ""}, "Invalid API URL: "),
             (
-                "client_id",
-                "client_secret",
-                "http://api.example.com/",
+                {"api_url": "http://api.example.com/"},
                 "Invalid API URL: http://api.example.com/",
             ),
+            ({"session": ""}, "session is must be HttpSession class: <class 'str'>"),
         ],
     )
-    def test_invalid(self, client_id, client_secret, api_url, expected):
+    def test_invalid(self, make_client, args, expected):
         with pytest.raises(ClientValueError) as excinfo:
-            Client(client_id, client_secret, api_url)
+            make_client(**args)
 
         assert str(excinfo.value) == expected
 

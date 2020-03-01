@@ -4,6 +4,7 @@
 
 Unreleased
 
+- Added to retry when server error occurs in HTTP request.
 - Changed to automatically correct the extension when downloading.
 
 ## 0.1.1
