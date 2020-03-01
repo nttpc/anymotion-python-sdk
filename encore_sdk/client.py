@@ -214,12 +214,17 @@ class Client(object):
         else:
             return UploadResult(image_id=None, movie_id=media_id)
 
-    def download(self, drawing_id: int, path: Union[str, Path], exist_ok=False) -> None:
+    def download(
+        self,
+        drawing_id: int,
+        path: Optional[Union[str, Path]] = None,
+        exist_ok: bool = False,
+    ) -> None:
         """Download file from drawing_id.
 
         Args:
             drawing_id
-            path: output file path.
+            path: output file path or directory path.
             exist_ok: if false (default), FileExistsError is raised if the target file
                 already exists.
 
@@ -227,22 +232,35 @@ class Client(object):
             FileExistsError
             RequestsError: HTTP request fails.
         """
-        if isinstance(path, str):
-            path = Path(path)
-        path = path.expanduser()
-
-        if path.exists() and not exist_ok:
-            raise FileExistsError(f"File exists: {path}")
-
         data = self.get_one_data("drawings", drawing_id)
         url = data.get("drawingUrl")
         if url is None:
             logger.warning("Skip download because there is no drawing url.")
             return
+        url_path = Path(urlparse(url).path)
+
+        if path is None:
+            path = url_path.name
+        if isinstance(path, str):
+            path = Path(path)
+        path = path.expanduser()
+
+        if path.is_dir():
+            path /= url_path.name
+
+        suffix = url_path.suffix
+        if path.suffix != suffix:
+            path = path.with_suffix(suffix)
+            logger.warning(f"Change path to {path}")
+
+        if path.exists() and not exist_ok:
+            logger.error(f"File exists: {path}")
+            raise FileExistsError(f"File exists: {path}")
 
         response = self.session.request(url)
         with path.open("wb") as f:
             f.write(response.raw.content)
+        logger.info(f"Download file to {path}")
 
     def extract_keypoint(
         self,
