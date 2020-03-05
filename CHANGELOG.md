@@ -2,7 +2,7 @@
 
 ## 0.2.0
 
-Unreleased
+Released 2020-03-06
 
 - Added to retry when server error occurs in HTTP request.
 - Changed to automatically correct the extension when downloading.
