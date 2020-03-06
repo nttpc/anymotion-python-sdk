@@ -14,6 +14,7 @@ class HttpResponse(object):
         """Get json data."""
         return self.raw.json()
 
+    # TODO: add default to args
     def get(self, keys: Union[str, tuple]) -> Any:
         """Fetch element from response."""
         if not isinstance(self.json, dict):

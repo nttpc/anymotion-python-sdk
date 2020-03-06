@@ -4,6 +4,7 @@ import pytest
 
 from encore_sdk.client import Client
 from encore_sdk.exceptions import ClientValueError, FileTypeError
+from encore_sdk.session import HttpSession
 
 
 @pytest.fixture
@@ -14,8 +15,9 @@ def make_client(requests_mock):
         api_url="http://api.example.com/anymotion/v1/",
         interval=5,
         timeout=600,
+        session=HttpSession(),
     ):
-        client = Client("client_id", "client_secret", api_url, interval, timeout)
+        client = Client(client_id, client_secret, api_url, interval, timeout, session)
         oauth_url = urljoin(client._base_url, "v1/oauth/accesstokens")
         requests_mock.post(oauth_url, json={"accessToken": "token"})
         return client
@@ -35,22 +37,21 @@ class TestInit(object):
         assert client._api_url == "http://api.example.com/anymotion/v1/"
 
     @pytest.mark.parametrize(
-        "client_id, client_secret, api_url, expected",
+        "args, expected",
         [
-            ("", "", "", "Client ID is not set."),
-            ("client_id", "", "", "Client Secret is not set."),
-            ("client_id", "client_secret", "", "Invalid API URL: "),
+            ({"client_id": ""}, "Client ID is not set."),
+            ({"client_secret": ""}, "Client Secret is not set."),
+            ({"api_url": ""}, "Invalid API URL: "),
             (
-                "client_id",
-                "client_secret",
-                "http://api.example.com/",
+                {"api_url": "http://api.example.com/"},
                 "Invalid API URL: http://api.example.com/",
             ),
+            ({"session": ""}, "session is must be HttpSession class: <class 'str'>"),
         ],
     )
-    def test_invalid(self, client_id, client_secret, api_url, expected):
+    def test_invalid(self, make_client, args, expected):
         with pytest.raises(ClientValueError) as excinfo:
-            Client(client_id, client_secret, api_url)
+            make_client(**args)
 
         assert str(excinfo.value) == expected
 
@@ -283,41 +284,120 @@ class TestAnalysisKeypoint(object):
 
 
 class TestDownload(object):
-    def test_download_ok(self, tmp_path, requests_mock, make_client):
+    def test_valid_path(self, tmp_path, requests_mock, make_client, setup):
         client = make_client()
-        drawing_id = 111
-        url = "http://download.example.com/image.jpg"
-        path = tmp_path / "image.jpg"
+        setup(client)
 
-        requests_mock.get(
-            f"{client._api_url}drawings/{drawing_id}/",
-            json={"execStatus": "SUCCESS", "drawingUrl": url},
-        )
-        requests_mock.get(url, content=b"image data")
+        path = tmp_path / "image.jpg"
+        expected_path = path
+
+        assert not expected_path.exists()
+
+        client.download(111, path)
+
+        assert expected_path.exists()
+
+    def test_str_path(self, tmp_path, requests_mock, make_client, setup):
+        client = make_client()
+        setup(client)
+
+        path = tmp_path / "image.jpg"
+        expected_path = path
+
+        assert not expected_path.exists()
+
+        client.download(111, str(path))
+
+        assert expected_path.exists()
+
+    def test_no_path(self, tmp_path, monkeypatch, requests_mock, make_client, setup):
+        monkeypatch.chdir(tmp_path)
+        client = make_client()
+        setup(client)
+
+        expected_path = tmp_path / "image.jpg"
+
+        assert not expected_path.exists()
+
+        client.download(111)
+
+        assert expected_path.exists()
+
+    def test_directory_path(self, tmp_path, requests_mock, make_client, setup):
+        client = make_client()
+        setup(client)
+
+        path = tmp_path
+        expected_path = tmp_path / "image.jpg"
+
+        assert not expected_path.exists()
+
+        client.download(111, path)
+
+        assert expected_path.exists()
+
+    def test_modify_suffix(self, tmp_path, requests_mock, make_client, setup):
+        client = make_client()
+        setup(client)
+
+        path = tmp_path / "image.png"
+        expected_path = tmp_path / "image.jpg"
+
+        assert not expected_path.exists()
+
+        client.download(111, path)
+
+        assert expected_path.exists()
+
+    def test_no_url(self, tmp_path, requests_mock, make_client, setup):
+        client = make_client()
+        setup(client, url=None)
+
+        path = tmp_path / "image.jpg"
 
         assert not path.exists()
 
-        client.download(drawing_id, path)
+        client.download(111, path)
+
+        assert not path.exists()
+
+    def test_exists_file(self, tmp_path, requests_mock, make_client, setup):
+        client = make_client()
+        setup(client)
+
+        path = tmp_path / "image.jpg"
+        path.touch()
 
         assert path.exists()
 
-    def test_download_skip(self, tmp_path, requests_mock, make_client):
+        with pytest.raises(FileExistsError):
+            client.download(111, path)
+
+    def test_exist_ok(self, tmp_path, requests_mock, make_client, setup):
         client = make_client()
-        drawing_id = 111
-        url = "http://download.example.com/image.jpg"
+        setup(client)
+
         path = tmp_path / "image.jpg"
+        path.touch()
 
-        requests_mock.get(
-            f"{client._api_url}drawings/{drawing_id}/",
-            json={"execStatus": "FAILURE", "drawingUrl": None},
-        )
-        requests_mock.get(url, content=b"image data")
+        assert path.exists()
 
-        assert not path.exists()
+        client.download(111, path, exist_ok=True)
 
-        client.download(drawing_id, path)
+        assert path.exists()
+        assert path.read_bytes() == b"image data"
 
-        assert not path.exists()
+    @pytest.fixture
+    def setup(self, requests_mock):
+        def _setup(client, drawing_id=111, url="http://download.example.com/image.jpg"):
+            requests_mock.get(
+                f"{client._api_url}drawings/{drawing_id}/",
+                json={"execStatus": "SUCCESS", "drawingUrl": url},
+            )
+            if url:
+                requests_mock.get(url, content=b"image data")
+
+        return _setup
 
 
 class TestWaitForDone(object):

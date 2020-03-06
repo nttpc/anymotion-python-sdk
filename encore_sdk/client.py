@@ -38,6 +38,7 @@ class Client(object):
         ),
         interval: Union[int, float] = 5,
         timeout: Union[int, float] = 600,
+        session: HttpSession = HttpSession(),
     ):
         """Initialize the client.
 
@@ -57,7 +58,11 @@ class Client(object):
         """
         logger.debug("Initializing client.")
 
-        self.session = HttpSession()
+        if not isinstance(session, HttpSession):
+            raise ClientValueError(
+                f"session is must be HttpSession class: {type(session)}"
+            )
+        self.session = session
 
         if client_id is None or client_id == "":
             raise ClientValueError(f"Client ID is not set.")
@@ -214,12 +219,17 @@ class Client(object):
         else:
             return UploadResult(image_id=None, movie_id=media_id)
 
-    def download(self, drawing_id: int, path: Union[str, Path], exist_ok=False) -> None:
+    def download(
+        self,
+        drawing_id: int,
+        path: Optional[Union[str, Path]] = None,
+        exist_ok: bool = False,
+    ) -> None:
         """Download file from drawing_id.
 
         Args:
             drawing_id
-            path: output file path.
+            path: output file path or directory path.
             exist_ok: if false (default), FileExistsError is raised if the target file
                 already exists.
 
@@ -227,22 +237,35 @@ class Client(object):
             FileExistsError
             RequestsError: HTTP request fails.
         """
-        if isinstance(path, str):
-            path = Path(path)
-        path = path.expanduser()
-
-        if path.exists() and not exist_ok:
-            raise FileExistsError(f"File exists: {path}")
-
         data = self.get_one_data("drawings", drawing_id)
         url = data.get("drawingUrl")
         if url is None:
             logger.warning("Skip download because there is no drawing url.")
             return
+        url_path = Path(urlparse(url).path)
+
+        if path is None:
+            path = url_path.name
+        if isinstance(path, str):
+            path = Path(path)
+        path = path.expanduser()
+
+        if path.is_dir():
+            path /= url_path.name
+
+        suffix = url_path.suffix
+        if path.suffix != suffix:
+            path = path.with_suffix(suffix)
+            logger.warning(f"Change path to {path}")
+
+        if path.exists() and not exist_ok:
+            logger.error(f"File exists: {path}")
+            raise FileExistsError(f"File exists: {path}")
 
         response = self.session.request(url)
         with path.open("wb") as f:
             f.write(response.raw.content)
+        logger.info(f"Download file to {path}")
 
     def extract_keypoint(
         self,
