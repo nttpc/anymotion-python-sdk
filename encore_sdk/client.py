@@ -224,6 +224,7 @@ class Client(object):
         drawing_id: int,
         path: Optional[Union[str, Path]] = None,
         exist_ok: bool = False,
+        fix_suffix: bool = False,
     ) -> None:
         """Download file from drawing_id.
 
@@ -232,6 +233,7 @@ class Client(object):
             path: output file path or directory path.
             exist_ok: if false (default), FileExistsError is raised if the target file
                 already exists.
+            fix_suffix: If the extension of path is invalid, correct it.
 
         Raises:
             FileExistsError
@@ -254,9 +256,9 @@ class Client(object):
             path /= url_path.name
 
         suffix = url_path.suffix
-        if path.suffix != suffix:
+        if fix_suffix and path.suffix != suffix:
             path = path.with_suffix(suffix)
-            logger.warning(f"Change path to {path}")
+            logger.info(f"Change path to {path}.")
 
         if path.exists() and not exist_ok:
             logger.error(f"File exists: {path}")
@@ -265,7 +267,7 @@ class Client(object):
         response = self.session.request(url)
         with path.open("wb") as f:
             f.write(response.raw.content)
-        logger.info(f"Download file to {path}")
+        logger.info(f"Download file to {path}.")
 
     def extract_keypoint(
         self,

@@ -336,16 +336,27 @@ class TestDownload(object):
 
         assert expected_path.exists()
 
-    def test_modify_suffix(self, tmp_path, requests_mock, make_client, setup):
+    @pytest.mark.parametrize(
+        "fix_suffix, expected_file_name", [(True, "image.jpg"), (False, "image.png")]
+    )
+    def test_modify_suffix(
+        self,
+        tmp_path,
+        requests_mock,
+        make_client,
+        setup,
+        fix_suffix,
+        expected_file_name,
+    ):
         client = make_client()
         setup(client)
 
         path = tmp_path / "image.png"
-        expected_path = tmp_path / "image.jpg"
+        expected_path = tmp_path / expected_file_name
 
         assert not expected_path.exists()
 
-        client.download(111, path)
+        client.download(111, path, fix_suffix=fix_suffix)
 
         assert expected_path.exists()
 
