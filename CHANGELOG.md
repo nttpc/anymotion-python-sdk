@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.1
+
+Released 2020-03-10
+
+- Changed from automatic to optional about correct the extension.
+
 ## 0.2.0
 
 Released 2020-03-06

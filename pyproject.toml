@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "encore-sdk"
-version = "0.2.0"
+version = "0.2.1"
 description = "AnyMotion SDK for Python"
 authors = ["Yusuke Kumihashi <y_kumiha@nttpc.co.jp>"]
 repository = "https://bitbucket.org/nttpc-datascience/encore-sdk/"
