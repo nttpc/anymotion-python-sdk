@@ -224,7 +224,7 @@ class Client(object):
         drawing_id: int,
         path: Optional[Union[str, Path]] = None,
         exist_ok: bool = False,
-        fix_suffix: bool = False
+        fix_suffix: bool = False,
     ) -> None:
         """Download file from drawing_id.
 
