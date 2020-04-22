@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "encore-sdk"
+name = "anymotion-sdk"
 version = "0.2.1"
 description = "AnyMotion SDK for Python"
 authors = ["Yusuke Kumihashi <y_kumiha@nttpc.co.jp>"]
-repository = "https://bitbucket.org/nttpc-datascience/encore-sdk/"
+repository = "https://github.com/nttpc/anymotion-python-sdk"
 classifiers = [
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
@@ -35,7 +35,7 @@ line_length = 88
 multi_line_output = 3
 
 [tool.coverage.run]
-source = ["encore_sdk"]
+source = ["anymotion_sdk"]
 branch = true
 
 [tool.coverage.report]

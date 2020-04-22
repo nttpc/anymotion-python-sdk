@@ -2,9 +2,9 @@ from urllib.parse import urljoin
 
 import pytest
 
-from encore_sdk.client import Client
-from encore_sdk.exceptions import ClientValueError, FileTypeError
-from encore_sdk.session import HttpSession
+from anymotion_sdk.client import Client
+from anymotion_sdk.exceptions import ClientValueError, FileTypeError
+from anymotion_sdk.session import HttpSession
 
 
 @pytest.fixture
