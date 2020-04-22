@@ -26,7 +26,6 @@ pytest = "^5.3.5"
 pytest-cov = "^2.8.1"
 pytest-mock = "^2.0.0"
 requests-mock = "^1.7.0"
-s3pypi = "^0.10.1"
 tox = "^3.14.3"
 
 [tool.isort]
