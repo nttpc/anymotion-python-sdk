@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.0.0
+
+Unreleased
+
+- Public release.
+
 ## 0.2.1
 
 Released 2020-03-10
