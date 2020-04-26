@@ -1,7 +1,7 @@
 import pytest
 
-# from encore_sdk import ResponseError
-from encore_sdk.response import HttpResponse, Result
+# from anymotion_sdk import ResponseError
+from anymotion_sdk.response import HttpResponse, Result
 
 
 class TestResponse(object):

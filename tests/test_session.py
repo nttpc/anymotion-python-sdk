@@ -1,9 +1,9 @@
 import pytest
 import requests
 
-from encore_sdk import RequestsError
-from encore_sdk.response import HttpResponse
-from encore_sdk.session import HttpSession
+from anymotion_sdk import RequestsError
+from anymotion_sdk.response import HttpResponse
+from anymotion_sdk.session import HttpSession
 
 
 class TestSession(object):
