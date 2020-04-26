@@ -2,7 +2,7 @@
 
 ## 1.0.0
 
-Unreleased
+Released 2020-04-27
 
 - Public release.
 
