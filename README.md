@@ -1,4 +1,4 @@
-# Encore SDK
+# AnyMotion Python SDK
 
 [![CircleCI][ci-status]][ci] [![codecov][codecov-status]][codecov]
 
@@ -6,25 +6,18 @@ AnyMotion SDK for Python.
 
 ## Installation
 
-Install and update using [pip](https://pip.pypa.io/en/stable/quickstart/) by pointing the `--extra-index-url`:
+Install using [pip](https://pip.pypa.io/en/stable/quickstart/):
 
 ```sh
-$ pip install -U encore-sdk --extra-index-url https://pypi.anymotion.jp
+$ pip install anymotion-sdk
 ```
-
-Alternatively, you can configure the index URL in `~/.pip/pip.conf`:
-
-```text
-[global]
-extra-index-url = https://pypi.anymotion.jp
-```
-
-**NOTICE**: You can only install from the internal network.
 
 ## Usage
 
+Set the client id and client secret issued by the [AnyMotion Portal](https://portal.anymotion.jp/).
+
 ```py
-from encore_sdk import Client
+from anymotion_sdk import Client
 
 # Setup client
 client = Client(client_id="your_client_id", client_secret="your_client_secret")
@@ -47,7 +40,7 @@ keypoint = client.get_keypoint(keypoint_id)
 
 See [CHANGELOG.md](CHANGELOG.md).
 
-[ci]: https://circleci.com/bb/nttpc-datascience/encore-sdk
-[ci-status]: https://circleci.com/bb/nttpc-datascience/encore-sdk/tree/master.svg?style=shield&circle-token=9a0810fc3cbbd22d0a8b65c37045c5e6c5555e28
-[codecov]: https://codecov.io/bb/nttpc-datascience/encore-sdk
-[codecov-status]: https://codecov.io/bb/nttpc-datascience/encore-sdk/branch/master/graph/badge.svg?token=Q1CzYrpmAb
+[ci]: https://circleci.com/gh/nttpc/anymotion-python-sdk
+[ci-status]: https://circleci.com/gh/nttpc/anymotion-python-sdk/tree/master.svg?style=shield&circle-token=b9824650553efb30dabe07e3ab2b140ae2efa60c
+[codecov]: https://codecov.io/gh/nttpc/anymotion-python-sdk
+[codecov-status]: https://codecov.io/gh/nttpc/anymotion-python-sdk/branch/master/graph/badge.svg?token=5QG7KUBZ7K

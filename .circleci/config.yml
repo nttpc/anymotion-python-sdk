@@ -1,7 +1,6 @@
 version: 2.1
 orbs:
   codecov: codecov/codecov@1.0.5
-  aws-cli: circleci/aws-cli@0.1.19
 
 executors:
   python:
@@ -96,7 +95,7 @@ jobs:
       - setup_python
       - run:
           name: Check security with bandit
-          command: poetry run bandit -r encore_api_cli -s B303
+          command: poetry run bandit -r anymotion_sdk -s B303
 
   release:
     executor:
@@ -109,7 +108,7 @@ jobs:
           command: poetry build
       - run:
           name: Distributing packages
-          command: poetry run s3pypi --bucket pypi.anymotion.jp --dist-path dist
+          command: poetry publish -u $PYPI_USERNAME -p $PYPI_PASSWORD
 
 workflows:
   workflow:
