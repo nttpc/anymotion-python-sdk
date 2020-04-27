@@ -106,9 +106,9 @@ jobs:
       - run:
           name: Build
           command: poetry build
-      # - run:
-      #     name: Distributing packages
-      #     command: poetry run s3pypi --bucket pypi.anymotion.jp --dist-path dist
+      - run:
+          name: Distributing packages
+          command: poetry publish -u $PYPI_USERNAME -p $PYPI_PASSWORD
 
 workflows:
   workflow:
