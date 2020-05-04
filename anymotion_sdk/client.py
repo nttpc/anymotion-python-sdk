@@ -152,6 +152,7 @@ class Client(object):
         while url:
             response = self.session.request(url, params=params, token=self.token)
             sub_data, url = response.get(("data", "next"))
+            params = {}
             data += sub_data
         return data
 
