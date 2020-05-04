@@ -50,8 +50,11 @@ class Client(object):
             timeout: The request timeout period(sec).
 
         Note:
-            If client_id, client_secret and api_url are not set, the environment
-            variables is used.
+            If client_id, client_secret, and api_url are not set, environment
+            variables "ANYMOTION_CLIENT_ID", "ANYMOTION_CLIENT_SECRET", and
+            "ANYMOTION_API_URL" are used, respectively.
+            In addition, if ANYMOTION_API_URL is not set, the default value
+            "https://api.customer.jp/anymotion/v1/" is used.
 
         Raises
             ClientValueError: Invalid argument value.
