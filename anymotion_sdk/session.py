@@ -73,7 +73,7 @@ class HttpSession(object):
         logger.debug(f"Sending http request: {prepped}")
         logger.debug(f"{prepped.method} {prepped.url}")
         logger.debug(f"Request headers: {prepped.headers}")
-        logger.debug(f"Request body: {prepped.body}")
+        logger.debug(f"Request body: {prepped.body!r}")
 
         self.request_histories.append(request)
         for callback in self.request_callbacks:

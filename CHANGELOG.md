@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.0.1
+
+Released 2020-05-06
+
+- Fixed an incorrect query parameter.
+
 ## 1.0.0
 
 Released 2020-04-27

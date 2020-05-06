@@ -1,6 +1,6 @@
 # AnyMotion Python SDK
 
-[![CircleCI][ci-status]][ci] [![codecov][codecov-status]][codecov]
+[![PyPi][pypi-version]][pypi] [![CircleCI][ci-status]][ci] [![codecov][codecov-status]][codecov]
 
 AnyMotion SDK for Python.
 
@@ -36,10 +36,16 @@ keypoint = extraction_result.json
 keypoint = client.get_keypoint(keypoint_id)
 ```
 
+## Example
+
+See [AnyMotion Examples](https://github.com/nttpc/anymotion-examples).
+
 ## Change Log
 
 See [CHANGELOG.md](CHANGELOG.md).
 
+[pypi]: https://pypi.org/project/anymotion-sdk
+[pypi-version]: https://img.shields.io/pypi/v/anymotion-sdk
 [ci]: https://circleci.com/gh/nttpc/anymotion-python-sdk
 [ci-status]: https://circleci.com/gh/nttpc/anymotion-python-sdk/tree/master.svg?style=shield&circle-token=b9824650553efb30dabe07e3ab2b140ae2efa60c
 [codecov]: https://codecov.io/gh/nttpc/anymotion-python-sdk
