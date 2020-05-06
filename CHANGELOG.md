@@ -2,7 +2,7 @@
 
 ## 1.0.1
 
-Unreleased
+Released 2020-05-06
 
 - Fixed an incorrect query parameter.
 
