@@ -1,10 +1,17 @@
 # Change Log
 
+## 1.1.0
+
+Unreleased
+
+- Added `Client.download_and_read` method that can be used by installing the extra package.
+- Changed the return value of `Client.download` to the path downloaded from None.
+
 ## 1.0.1
 
 Released 2020-05-06
 
-- Fixed an incorrect query parameter.
+- Fixed a bug that caused duplicate query parameters in requests for the next URL.
 
 ## 1.0.0
 
