@@ -11,7 +11,7 @@ def read_image(path: Path) -> np.ndarray:
         path: The path to the file to be read.
 
     Returns:
-        Image data in numpy format, where the shape is (1, 2, Channel).
+        Image data in numpy format, where the shape is (Height, Width, Channel).
         The color model is BGR.
     """
     return cv2.imread(str(path))
@@ -24,7 +24,7 @@ def read_video(path: Path) -> np.ndarray:
         path: The path to the file to be read.
 
     Returns:
-        Video data in numpy format, where the shape is (Frame, 1, 2, Channel).
+        Video data in numpy format, where the shape is (Frame, Height, Width, Channel).
     """
     video = []
     cap = cv2.VideoCapture(str(path))
