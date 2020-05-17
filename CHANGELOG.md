@@ -6,6 +6,8 @@ Unreleased
 
 - Added `Client.download_and_read` method that can be used by installing the extra package.
 - Changed the return value of `Client.download` to the path downloaded from None.
+- Changed to refresh token before they expire.
+- Moved the token property from the Client class to the Authentication class.
 
 ## 1.0.1
 

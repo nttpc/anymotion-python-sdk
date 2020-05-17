@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, List, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 
-from .auth import get_token
+from .auth import Authentication
 from .exceptions import ClientException, ClientValueError, ExtraPackageError
 from .response import Result
 from .session import HttpSession
@@ -68,14 +68,6 @@ class Client(object):
             )
         self.session = session
 
-        if client_id is None or client_id == "":
-            raise ClientValueError("Client ID is not set.")
-        self.client_id = client_id
-
-        if client_secret is None or client_secret == "":
-            raise ClientValueError("Client Secret is not set.")
-        self.client_secret = client_secret
-
         parts = urlparse(api_url)
         api_path = parts.path
         if "anymotion" not in api_path:
@@ -83,26 +75,17 @@ class Client(object):
         if api_path[-1] != "/":
             api_path += "/"
 
-        self._base_url = str(urlunparse((parts.scheme, parts.netloc, "", "", "", "")))
-        self._api_url = urljoin(self._base_url, api_path)
-        self._token: Optional[str] = None
+        base_url = str(urlunparse((parts.scheme, parts.netloc, "", "", "", "")))
+        self._api_url = urljoin(base_url, api_path)
+
+        self.auth = Authentication(
+            client_id, client_secret, base_url=base_url, session=self.session
+        )
 
         self._interval = max(0.1, interval)
         self._max_steps = int(max(1, timeout / self._interval))
 
         self._page_size = 1000
-
-    @property
-    def token(self) -> str:
-        """Return access token."""
-        if self._token is None:
-            self._token = get_token(
-                self.client_id,
-                self.client_secret,
-                base_url=self._base_url,
-                session=self.session,
-            )
-        return self._token
 
     def get_one_data(self, endpoint: str, endpoint_id: int) -> dict:
         """Get one piece of data.
@@ -118,7 +101,7 @@ class Client(object):
             RequestsError: HTTP request fails.
         """
         url = urljoin(self._api_url, f"{endpoint}/{endpoint_id}/")
-        response = self.session.request(url, token=self.token)
+        response = self.session.request(url, token=self.auth.token)
         return response.json
 
     def get_image(self, image_id: int) -> dict:
@@ -151,7 +134,7 @@ class Client(object):
         params["size"] = self._page_size
         data: List[dict] = []
         while url:
-            response = self.session.request(url, params=params, token=self.token)
+            response = self.session.request(url, params=params, token=self.auth.token)
             sub_data, url = response.get(("data", "next"))
             params = {}
             data += sub_data
@@ -207,7 +190,7 @@ class Client(object):
             urljoin(self._api_url, f"{media_type}s/"),
             method="POST",
             json={"content_md5": content_md5, "name": path.stem, "text": text},
-            token=self.token,
+            token=self.auth.token,
         )
         media_id, upload_url = response.get(("id", "uploadUrl"))
 
@@ -330,7 +313,9 @@ class Client(object):
             data = {"image_id": image_id}
 
         url = urljoin(self._api_url, "keypoints/")
-        response = self.session.request(url, method="POST", json=data, token=self.token)
+        response = self.session.request(
+            url, method="POST", json=data, token=self.auth.token
+        )
         return response.get("id")
 
     def draw_keypoint(
@@ -348,7 +333,9 @@ class Client(object):
         json: Dict[str, Union[int, list, dict]] = {"keypoint_id": keypoint_id}
         if rule is not None:
             json["rule"] = rule
-        response = self.session.request(url, method="POST", json=json, token=self.token)
+        response = self.session.request(
+            url, method="POST", json=json, token=self.auth.token
+        )
         return response.get("id")
 
     def analyze_keypoint(self, keypoint_id: int, rule: Union[list, dict]) -> int:
@@ -364,7 +351,9 @@ class Client(object):
         json: Dict[str, Union[int, list, dict]] = {"keypoint_id": keypoint_id}
         if rule is not None:
             json["rule"] = rule
-        response = self.session.request(url, method="POST", json=json, token=self.token)
+        response = self.session.request(
+            url, method="POST", json=json, token=self.auth.token
+        )
         return response.get("id")
 
     def wait_for_extraction(self, keypoint_id: int) -> Result:
@@ -396,7 +385,7 @@ class Client(object):
 
     def _wait_for_done(self, url: str) -> Result:
         for _ in range(self._max_steps):
-            response = self.session.request(url, token=self.token)
+            response = self.session.request(url, token=self.auth.token)
             result = Result(response.raw)
             if result.status in ["SUCCESS", "FAILURE"]:
                 break

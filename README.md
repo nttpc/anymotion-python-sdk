@@ -2,7 +2,8 @@
 
 [![PyPi][pypi-version]][pypi] [![CircleCI][ci-status]][ci] [![codecov][codecov-status]][codecov]
 
-AnyMotion SDK for Python.
+This is the Software Development Kit (SDK) for Python, which allows Python developers to write software that makes use of [AnyMotion](https://anymotion.nttpc.co.jp).
+It works on Python 3.6 or greater.
 
 ## Installation
 
