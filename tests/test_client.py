@@ -1,10 +1,10 @@
 from urllib.parse import urljoin
 
-import pytest
 import numpy as np
+import pytest
 
 from anymotion_sdk.client import Client
-from anymotion_sdk.exceptions import ClientValueError, FileTypeError
+from anymotion_sdk.exceptions import ClientException, ClientValueError, FileTypeError
 from anymotion_sdk.session import HttpSession
 
 
@@ -369,9 +369,8 @@ class TestDownload(object):
 
         assert not path.exists()
 
-        client.download(111, path)
-
-        assert not path.exists()
+        with pytest.raises(ClientException):
+            client.download(111, path)
 
     def test_exists_file(self, tmp_path, requests_mock, make_client, setup):
         client = make_client()

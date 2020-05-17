@@ -1,6 +1,5 @@
 import os
 import time
-import warnings
 from collections import namedtuple
 from logging import getLogger
 from pathlib import Path
@@ -9,7 +8,7 @@ from typing import Dict, List, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 
 from .auth import get_token
-from .exceptions import ClientValueError
+from .exceptions import ClientException, ClientValueError, ExtraPackageError
 from .response import Result
 from .session import HttpSession
 from .utils import create_md5, get_media_type
@@ -245,14 +244,16 @@ class Client(object):
             The path to the downloaded file.
 
         Raises:
+            ClientException
             FileExistsError
             RequestsError: HTTP request fails.
         """
         data = self.get_one_data("drawings", drawing_id)
         url = data.get("drawingUrl")
         if url is None:
-            logger.warning("Skip download because there is no drawing url.")
-            return
+            raise ClientException(
+                "Can't download the file because it doesn't have a drawing url."
+            )
         url_path = Path(urlparse(url).path)
 
         if path is None:
@@ -285,15 +286,10 @@ class Client(object):
         try:
             from .extras import read_image, read_video
         except ImportError:
-            warnings.warn(
+            raise ExtraPackageError(
                 "The extras package is not installed. "
                 "Install as follows: pip install anymotion-sdk[cv]"
             )
-            logger.warning(
-                "Skip the download_and_read method "
-                "because the extras package is not installed."
-            )
-            return
 
         with TemporaryDirectory() as dir_path:
             file_path = self.download(drawing_id, path=dir_path)
