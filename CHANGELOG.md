@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.1.0
+
+- Changed to refresh token before they expire.
+- Moved the token property from the Client class to the Authentication class.
+
 ## 1.0.1
 
 Released 2020-05-06

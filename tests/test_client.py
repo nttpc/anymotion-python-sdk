@@ -8,7 +8,7 @@ from anymotion_sdk.session import HttpSession
 
 
 @pytest.fixture
-def make_client(requests_mock):
+def make_client(mocker):
     def _make_client(
         client_id="client_id",
         client_secret="client_secret",
@@ -18,8 +18,9 @@ def make_client(requests_mock):
         session=HttpSession(),
     ):
         client = Client(client_id, client_secret, api_url, interval, timeout, session)
-        oauth_url = urljoin(client._base_url, "v1/oauth/accesstokens")
-        requests_mock.post(oauth_url, json={"accessToken": "token"})
+        auth_mock = mocker.MagicMock()
+        auth_mock.token = "token"
+        mocker.patch.object(client, "auth", auth_mock)
         return client
 
     return _make_client
@@ -436,9 +437,7 @@ class TestWaitForDone(object):
         response = client._wait_for_done(url)
 
         assert response.status == expected
-
-        # NOTE: +1 is POST https://api.example.com/v1/oauth/accesstokens
-        assert requests_mock.call_count == len(response_list) + 1
+        assert requests_mock.call_count == len(response_list)
 
     def test_timeout(self, make_client, requests_mock):
         url = "https://example.com/"
@@ -455,4 +454,4 @@ class TestWaitForDone(object):
         response = client._wait_for_done(url)
 
         assert response.status == "TIMEOUT"
-        assert requests_mock.call_count == 2
+        assert requests_mock.call_count == 1
