@@ -4,8 +4,9 @@
 
 Unreleased
 
-- Added `Client.download_and_read` method that can be used by installing the extra package.
-- Changed the return value of `Client.download` to the path downloaded from None.
+- Added parameters for `get_keypoint`, `get_drawing`, and `get_analysis` that can also return related data at the same time.
+- Added `download_and_read` method that can be used by installing the extra package.
+- Changed the return value of `download` to the path downloaded from None.
 - Changed to refresh token before they expire.
 - Moved the token property from the Client class to the Authentication class.
 
