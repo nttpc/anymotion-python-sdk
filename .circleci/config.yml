@@ -23,7 +23,7 @@ commands:
             - deps-<< parameters.version >>-{{ checksum "poetry.lock" }}
       - run:
           name: Install python packages
-          command: poetry install
+          command: poetry install -E cv
       - save_cache:
           key: deps-<< parameters.version >>-{{ checksum "poetry.lock" }}
           paths:

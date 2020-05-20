@@ -2,6 +2,10 @@
 
 ## 1.1.0
 
+Unreleased
+
+- Added `Client.download_and_read` method that can be used by installing the extra package.
+- Changed the return value of `Client.download` to the path downloaded from None.
 - Changed to refresh token before they expire.
 - Moved the token property from the Client class to the Authentication class.
 
@@ -9,7 +13,7 @@
 
 Released 2020-05-06
 
-- Fixed an incorrect query parameter.
+- Fixed a bug that caused duplicate query parameters in requests for the next URL.
 
 ## 1.0.0
 

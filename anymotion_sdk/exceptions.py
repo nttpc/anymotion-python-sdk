@@ -16,3 +16,7 @@ class RequestsError(ClientException):
 
 class ResponseError(ClientException):
     """Raised when an HTTP response is invalid."""
+
+
+class ExtraPackageError(ClientException):
+    """Raised when no extra packages are installed."""

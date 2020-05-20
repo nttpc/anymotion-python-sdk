@@ -1,9 +1,10 @@
 from urllib.parse import urljoin
 
+import numpy as np
 import pytest
 
 from anymotion_sdk.client import Client
-from anymotion_sdk.exceptions import ClientValueError, FileTypeError
+from anymotion_sdk.exceptions import ClientException, ClientValueError, FileTypeError
 from anymotion_sdk.session import HttpSession
 
 
@@ -369,9 +370,8 @@ class TestDownload(object):
 
         assert not path.exists()
 
-        client.download(111, path)
-
-        assert not path.exists()
+        with pytest.raises(ClientException):
+            client.download(111, path)
 
     def test_exists_file(self, tmp_path, requests_mock, make_client, setup):
         client = make_client()
@@ -398,6 +398,44 @@ class TestDownload(object):
 
         assert path.exists()
         assert path.read_bytes() == b"image data"
+
+    @pytest.fixture
+    def setup(self, requests_mock):
+        def _setup(client, drawing_id=111, url="http://download.example.com/image.jpg"):
+            requests_mock.get(
+                f"{client._api_url}drawings/{drawing_id}/",
+                json={"execStatus": "SUCCESS", "drawingUrl": url},
+            )
+            if url:
+                requests_mock.get(url, content=b"image data")
+
+        return _setup
+
+
+class TestDownloadAndRead(object):
+    def test_read_image(self, mocker, tmp_path, requests_mock, make_client, setup):
+        expected = np.array([1])
+        read_mock = mocker.MagicMock(return_value=expected)
+        mocker.patch("anymotion_sdk.extras.read_image", read_mock)
+
+        client = make_client()
+        setup(client)
+
+        image = client.download_and_read(111)
+
+        assert image == expected
+
+    def test_read_video(self, mocker, tmp_path, requests_mock, make_client, setup):
+        expected = np.array([1])
+        read_mock = mocker.MagicMock(return_value=expected)
+        mocker.patch("anymotion_sdk.extras.read_video", read_mock)
+
+        client = make_client()
+        setup(client, url="http://download.example.com/movie.mp4")
+
+        movie = client.download_and_read(111)
+
+        assert movie == expected
 
     @pytest.fixture
     def setup(self, requests_mock):

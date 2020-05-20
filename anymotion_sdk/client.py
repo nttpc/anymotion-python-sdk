@@ -3,11 +3,12 @@ import time
 from collections import namedtuple
 from logging import getLogger
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Dict, List, Optional, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 
 from .auth import Authentication
-from .exceptions import ClientValueError
+from .exceptions import ClientException, ClientValueError, ExtraPackageError
 from .response import Result
 from .session import HttpSession
 from .utils import create_md5, get_media_type
@@ -212,8 +213,8 @@ class Client(object):
         path: Optional[Union[str, Path]] = None,
         exist_ok: bool = False,
         fix_suffix: bool = False,
-    ) -> None:
-        """Download file from drawing_id.
+    ) -> Path:
+        """Download a file from drawing_id.
 
         Args:
             drawing_id
@@ -222,15 +223,20 @@ class Client(object):
                 already exists.
             fix_suffix: If the extension of path is invalid, correct it.
 
+        Returns:
+            The path to the downloaded file.
+
         Raises:
+            ClientException
             FileExistsError
             RequestsError: HTTP request fails.
         """
         data = self.get_one_data("drawings", drawing_id)
         url = data.get("drawingUrl")
         if url is None:
-            logger.warning("Skip download because there is no drawing url.")
-            return
+            raise ClientException(
+                "Can't download the file because it doesn't have a drawing url."
+            )
         url_path = Path(urlparse(url).path)
 
         if path is None:
@@ -255,6 +261,25 @@ class Client(object):
         with path.open("wb") as f:
             f.write(response.raw.content)
         logger.info(f"Download file to {path}.")
+
+        return path
+
+    def download_and_read(self, drawing_id: int):
+        """Download and read a file from drawing_id."""
+        try:
+            from .extras import read_image, read_video
+        except ImportError:
+            raise ExtraPackageError(
+                "The extras package is not installed. "
+                "Install as follows: pip install anymotion-sdk[cv]"
+            )
+
+        with TemporaryDirectory() as dir_path:
+            file_path = self.download(drawing_id, path=dir_path)
+            if get_media_type(file_path) == "image":
+                return read_image(file_path)
+            else:
+                return read_video(file_path)
 
     def extract_keypoint(
         self,

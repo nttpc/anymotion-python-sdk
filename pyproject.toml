@@ -17,6 +17,10 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.6"
 requests = "^2.22.0"
+opencv-python = { version = "^4.2.0", optional = true }
+
+[tool.poetry.extras]
+cv = ["opencv-python"]
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6.2"
