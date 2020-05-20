@@ -123,6 +123,136 @@ class TestGetData(object):
         assert result == data
 
 
+class TestGetKeypoint(object):
+    def test_without_join_data(self, requests_mock, make_client):
+        client = make_client()
+        data = {"id": 1, "image": 2, "movie": None, "keypoint": [{"nose": [10, 20]}]}
+        requests_mock.get(
+            f"{client._api_url}keypoints/1/", json=data,
+        )
+        result = client.get_keypoint(1)
+
+        assert result == data
+
+    def test_with_join_image_data(self, requests_mock, make_client):
+        client = make_client()
+        keypoint = {
+            "id": 1,
+            "image": 2,
+            "movie": None,
+            "keypoint": [{"nose": [10, 20]}],
+        }
+        image = {"id": 2, "name": "image"}
+        requests_mock.get(
+            f"{client._api_url}keypoints/1/", json=keypoint,
+        )
+        requests_mock.get(
+            f"{client._api_url}images/2/", json=image,
+        )
+        result = client.get_keypoint(1, join_data=True)
+
+        expected = keypoint
+        expected["image"] = image
+        assert result == expected
+
+    def test_with_join_movie_data(self, requests_mock, make_client):
+        client = make_client()
+        keypoint = {
+            "id": 1,
+            "image": None,
+            "movie": 2,
+            "keypoint": [{"nose": [10, 20]}],
+        }
+        movie = {"id": 2, "name": "movie"}
+        requests_mock.get(
+            f"{client._api_url}keypoints/1/", json=keypoint,
+        )
+        requests_mock.get(
+            f"{client._api_url}movies/2/", json=movie,
+        )
+        result = client.get_keypoint(1, join_data=True)
+
+        expected = keypoint
+        expected["movie"] = movie
+        assert result == expected
+
+
+class TestGetDrawing(object):
+    def test_without_join_data(self, requests_mock, make_client):
+        client = make_client()
+        data = {"id": 1, "keypoint": 2}
+        requests_mock.get(
+            f"{client._api_url}drawings/1/", json=data,
+        )
+        result = client.get_drawing(1)
+
+        assert result == data
+
+    def test_with_join_data(self, requests_mock, make_client):
+        client = make_client()
+        drawing = {"id": 1, "keypoint": 2}
+        keypoint = {
+            "id": 2,
+            "image": 3,
+            "movie": None,
+            "keypoint": [{"nose": [10, 20]}],
+        }
+        image = {"id": 3, "name": "image"}
+        requests_mock.get(
+            f"{client._api_url}drawings/1/", json=drawing,
+        )
+        requests_mock.get(
+            f"{client._api_url}keypoints/2/", json=keypoint,
+        )
+        requests_mock.get(
+            f"{client._api_url}images/3/", json=image,
+        )
+        result = client.get_drawing(1, join_data=True)
+
+        expected = drawing
+        expected["keypoint"] = keypoint
+        expected["keypoint"]["image"] = image
+        assert result == expected
+
+
+class TestGetAnalysis(object):
+    def test_without_join_data(self, requests_mock, make_client):
+        client = make_client()
+        data = {"id": 1, "keypoint": 2}
+        requests_mock.get(
+            f"{client._api_url}analyses/1/", json=data,
+        )
+        result = client.get_analysis(1)
+
+        assert result == data
+
+    def test_with_join_data(self, requests_mock, make_client):
+        client = make_client()
+        analysis = {"id": 1, "keypoint": 2}
+        keypoint = {
+            "id": 2,
+            "image": 3,
+            "movie": None,
+            "keypoint": [{"nose": [10, 20]}],
+        }
+        image = {"id": 3, "name": "image"}
+        requests_mock.get(
+            f"{client._api_url}analyses/1/", json=analysis,
+        )
+        requests_mock.get(
+            f"{client._api_url}keypoints/2/", json=keypoint,
+        )
+        requests_mock.get(
+            f"{client._api_url}images/3/", json=image,
+        )
+        result = client.get_analysis(1, join_data=True)
+
+        expected = analysis
+        expected["keypoint"] = keypoint
+        expected["keypoint"]["image"] = image
+        assert result == expected
+
+
 class TestUpload(object):
     @pytest.mark.parametrize(
         "expected_media_type, path",

@@ -54,9 +54,34 @@ extraction_result = client.wait_for_extraction(keypoint_id)
 
 # Get keypoint data from result
 keypoint = extraction_result.json
+```
 
-# Get keypoint data from keypoint_id
+You can get the uploaded data or the keypoint extracted data and so on as follows:
+
+```py
+# Get data of a specific id
+image = client.get_image(image_id)
+movie = client.get_movie(movie_id)
 keypoint = client.get_keypoint(keypoint_id)
+drawing = client.get_drawing(drawing_id)
+analysis = client.get_analysis(analysis_id)
+
+# Get all data
+images = client.get_images()
+movies = client.get_movies()
+keypoints = client.get_keypoints()
+drawings = client.get_drawings()
+analyses = client.get_analyses()
+```
+
+In `get_keypoint`, `get_drawing` and `get_analysis`, you can use the `join_data` option to get the relevant data at the same time.
+
+```py
+>>> client.get_keypoint(keypoint_id)
+{'id': 1, 'image': 2, 'movie': None, 'keypoint': [{'nose': [10, 20]}], 'execStatus': 'SUCCESS', 'failureDetail': None, 'createdAt': '2020-01-01T00:00:00.000000Z', 'updatedAt': '2020-01-01T00:00:00.000000Z'}
+
+>>> client.get_keypoint(keypoint_id, join_data=True)
+{'id': 1, 'image': {'id': 2, 'name': 'image', 'text': '', 'height': 100, 'width': 100, 'contentMd5': 'ecWkdCSrnBa9+EYREt/fbg==', 'createdAt': '2020-01-01T00:00:00.000000Z', 'updatedAt': '2020-01-01T00:00:00.000000Z'}, 'movie': None, 'keypoint': [{'nose': [10, 20]}], 'execStatus': 'SUCCESS', 'failureDetail': None, 'createdAt': '2020-01-01T00:00:00.000000Z', 'updatedAt': '2020-01-01T00:00:00.000000Z'}
 ```
 
 The way to output the log to stdout is as follows:

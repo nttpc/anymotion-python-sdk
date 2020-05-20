@@ -112,17 +112,35 @@ class Client(object):
         """Get movie data."""
         return self.get_one_data("movies", movie_id)
 
-    def get_keypoint(self, keypoint_id: int) -> dict:
+    def get_keypoint(self, keypoint_id: int, join_data: bool = False) -> dict:
         """Get keypoint data."""
-        return self.get_one_data("keypoints", keypoint_id)
+        keypoint = self.get_one_data("keypoints", keypoint_id)
+        if join_data:
+            image_id = keypoint.get("image")
+            if image_id:
+                keypoint["image"] = self.get_image(image_id)
+            movie_id = keypoint.get("movie")
+            if movie_id:
+                keypoint["movie"] = self.get_movie(movie_id)
+        return keypoint
 
-    def get_drawing(self, drawing_id: int) -> dict:
+    def get_drawing(self, drawing_id: int, join_data: bool = False) -> dict:
         """Get drawing data."""
-        return self.get_one_data("drawings", drawing_id)
+        drawing = self.get_one_data("drawings", drawing_id)
+        if join_data:
+            keypoint_id = drawing.get("keypoint")
+            if keypoint_id:
+                drawing["keypoint"] = self.get_keypoint(keypoint_id, join_data=True)
+        return drawing
 
-    def get_analysis(self, analysis_id: int) -> dict:
+    def get_analysis(self, analysis_id: int, join_data: bool = False) -> dict:
         """Get analysis data."""
-        return self.get_one_data("analyses", analysis_id)
+        analysis = self.get_one_data("analyses", analysis_id)
+        if join_data:
+            keypoint_id = analysis.get("keypoint")
+            if keypoint_id:
+                analysis["keypoint"] = self.get_keypoint(keypoint_id, join_data=True)
+        return analysis
 
     def get_list_data(self, endpoint: str, params: dict = {}) -> List[dict]:
         """Get list data.
@@ -145,15 +163,15 @@ class Client(object):
         return self.get_list_data("images", params=params)
 
     def get_movies(self, params: dict = {}) -> List[dict]:
-        """Get movie data."""
+        """Get movie list."""
         return self.get_list_data("movies", params=params)
 
     def get_keypoints(self, params: dict = {}) -> List[dict]:
-        """Get keypoint data."""
+        """Get keypoint list."""
         return self.get_list_data("keypoints", params=params)
 
     def get_drawings(self, params: dict = {}) -> List[dict]:
-        """Get drawing data."""
+        """Get drawing list."""
         return self.get_list_data("drawings", params=params)
 
     def get_analyses(self, params: dict = {}) -> List[dict]:
