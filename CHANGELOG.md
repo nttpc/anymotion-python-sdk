@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.2.0
+
+Unreleased
+
+- Added `background_rule` to the parameter of `draw_keypoint`.
+
 ## 1.1.0
 
 Released 2020-05-21

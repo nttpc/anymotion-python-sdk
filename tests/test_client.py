@@ -360,19 +360,41 @@ class TestExtractKeypoint(object):
 
 
 class TestDrawingKeypoint(object):
-    def test_キーポイント描画を開始できること(self, requests_mock, make_client):
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {},
+            {
+                "rule": {
+                    "drawing_type": "stickPicture",
+                    "pattern": "all",
+                    "color": "red",
+                }
+            },
+            {"background_rule": {"skeletonOnly": True}},
+            {
+                "rule": {
+                    "drawing_type": "stickPicture",
+                    "pattern": "all",
+                    "color": "red",
+                },
+                "background_rule": {"skeletonOnly": True},
+            },
+        ],
+    )
+    def test_can_start_keypoint_drawing(self, requests_mock, make_client, kwargs):
         client = make_client()
-        keypoint_id = 1
-        expected_drawing_id = 1
+        keypoint_id = 111
+        expected_drawing_id = 222
         requests_mock.post(
             f"{client._api_url}drawings/", json={"id": expected_drawing_id}
         )
 
-        drawing_id = client.draw_keypoint(keypoint_id)
+        drawing_id = client.draw_keypoint(keypoint_id, **kwargs)
 
         assert drawing_id == expected_drawing_id
 
-    def test_キーポイント描画を完了できること(self, requests_mock, make_client):
+    def test_can_complete_keypoint_drawing(self, requests_mock, make_client):
         client = make_client()
         drawing_id = 1
         expected_drawing_url = "http://drawing_url.example.com"
