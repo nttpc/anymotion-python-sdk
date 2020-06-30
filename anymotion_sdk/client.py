@@ -337,9 +337,23 @@ class Client(object):
         return response.get("id")
 
     def draw_keypoint(
-        self, keypoint_id: int, rule: Optional[Union[list, dict]] = None
+        self,
+        keypoint_id: int,
+        rule: Optional[Union[list, dict]] = None,
+        background_rule: Optional[dict] = None,
     ) -> int:
         """Start drawing for keypoint_id.
+
+        Args:
+            keypoint_id: Keypoint ID used for drawing.
+            rule: Rules for how to draw.
+                example: {
+                    "drawingType": "stickPicture",
+                    "pattern": "all",
+                    "color": "red"
+                }
+            background_rule: Rules for what kind of background to draw.
+                example: {"skeletonOnly": True}
 
         Returns:
             drawing_id.
@@ -351,6 +365,8 @@ class Client(object):
         json: Dict[str, Union[int, list, dict]] = {"keypoint_id": keypoint_id}
         if rule is not None:
             json["rule"] = rule
+        if background_rule is not None:
+            json["background_rule"] = background_rule
         response = self.session.request(
             url, method="POST", json=json, token=self.auth.token
         )
