@@ -1,6 +1,7 @@
 import pytest
 
 from anymotion_sdk.auth import Authentication
+from anymotion_sdk.exceptions import ResponseError
 
 
 @pytest.fixture
@@ -49,3 +50,17 @@ class TestAuthentication(object):
 
         assert auth.token == "token1"
         assert auth.token == "token2"
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [{"tokens": [None]}, {"issued_ats": [None]}, {"issued_ats": ["not int"]}],
+    )
+    def test_invalid_response(self, make_auth, kwargs):
+        auth = make_auth(**kwargs)
+
+        with pytest.raises(ResponseError) as excinfo:
+            auth.token
+
+        assert (
+            str(excinfo.value) == "The value of token could not be obtained correctly."
+        )
