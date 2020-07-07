@@ -4,6 +4,7 @@
 
 Unreleased
 
+- Added `get_comparison` and `get_comparisons` to be able to use AnyMotion's new feature, comparison.
 - Added `background_rule` to the parameter of `draw_keypoint`.
 
 ## 1.1.0

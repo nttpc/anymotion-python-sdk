@@ -91,7 +91,7 @@ class Client(object):
         """Get one piece of data.
 
         Args:
-            endpoint: images, movies, keypoints, drawings, or analyses
+            endpoint: images, movies, keypoints, drawings, analyses, or comparisons
             endpoint_id
 
         Returns:
@@ -142,8 +142,29 @@ class Client(object):
                 analysis["keypoint"] = self.get_keypoint(keypoint_id, join_data=True)
         return analysis
 
+    def get_comparison(self, comparison_id: int, join_data: bool = False) -> dict:
+        """Get comparisons data."""
+        comparison = self.get_one_data("comparisons", comparison_id)
+        if join_data:
+            source_keypoint_id = comparison.get("source")
+            target_keypoint_id = comparison.get("target")
+            if source_keypoint_id:
+                comparison["source"] = self.get_keypoint(
+                    source_keypoint_id, join_data=True
+                )
+            if target_keypoint_id:
+                comparison["target"] = self.get_keypoint(
+                    target_keypoint_id, join_data=True
+                )
+        return comparison
+
     def get_list_data(self, endpoint: str, params: dict = {}) -> List[dict]:
         """Get list data.
+
+        Args:
+            endpoint: images, movies, keypoints, drawings, analyses, or comparisons
+            endpoint_id
+            params
 
         Raises:
             RequestsError: HTTP request fails.
@@ -177,6 +198,10 @@ class Client(object):
     def get_analyses(self, params: dict = {}) -> List[dict]:
         """Get analysis list."""
         return self.get_list_data("analyses", params=params)
+
+    def get_comparisons(self, params: dict = {}) -> List[dict]:
+        """Get comparisons list."""
+        return self.get_list_data("comparisons", params=params)
 
     def upload(
         self, path: Union[str, Path], text: Optional[str] = None

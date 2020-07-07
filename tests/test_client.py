@@ -253,6 +253,48 @@ class TestGetAnalysis(object):
         assert result == expected
 
 
+class TestGetComparison(object):
+    def test_without_join_data(self, requests_mock, make_client):
+        client = make_client()
+        comparison = {"id": 1, "source": 2, "target": 3}
+        requests_mock.get(
+            f"{client._api_url}comparisons/1/", json=comparison,
+        )
+        result = client.get_comparison(1)
+
+        assert result == comparison
+
+    def test_with_join_data(self, requests_mock, make_client):
+        client = make_client()
+        comparison = {"id": 1, "source": 2, "target": 3}
+        source = {
+            "id": 2,
+            "image": 3,
+            "movie": None,
+            "keypoint": [{"nose": [10, 20]}],
+        }
+        target = {
+            "id": 3,
+            "image": 3,
+            "movie": None,
+            "keypoint": [{"nose": [10, 20]}],
+        }
+        image = {"id": 3, "name": "image"}
+        requests_mock.get(f"{client._api_url}comparisons/1/", json=comparison)
+        requests_mock.get(f"{client._api_url}keypoints/2/", json=source)
+        requests_mock.get(f"{client._api_url}keypoints/3/", json=target)
+        requests_mock.get(f"{client._api_url}images/3/", json=image)
+
+        result = client.get_comparison(1, join_data=True)
+
+        expected = comparison
+        expected["source"] = source
+        expected["source"]["image"] = image
+        expected["target"] = target
+        expected["target"]["image"] = image
+        assert result == expected
+
+
 class TestUpload(object):
     @pytest.mark.parametrize(
         "expected_media_type, path",
