@@ -12,9 +12,11 @@ def read_image(path: Path) -> np.ndarray:
 
     Returns:
         Image data in numpy format, where the shape is (Height, Width, Channel).
-        The color model is BGR.
+        The color model is RGB.
     """
-    return cv2.imread(str(path))
+    image = cv2.imread(str(path))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    return image
 
 
 def read_video(path: Path) -> np.ndarray:
@@ -31,6 +33,7 @@ def read_video(path: Path) -> np.ndarray:
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             video.append(frame)
         else:
             break
