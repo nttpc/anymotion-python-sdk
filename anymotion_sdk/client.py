@@ -11,7 +11,7 @@ from .auth import Authentication
 from .exceptions import ClientException, ClientValueError, ExtraPackageError
 from .response import Result
 from .session import HttpSession
-from .utils import create_md5, get_media_type
+from .utils import create_md5, get_media_type, check_endpoint
 
 logger = getLogger(__name__)
 UploadResult = namedtuple("UploadResult", ("image_id", "movie_id"))
@@ -87,6 +87,7 @@ class Client(object):
 
         self._page_size = 1000
 
+    @check_endpoint
     def get_one_data(self, endpoint: str, endpoint_id: int) -> dict:
         """Get one piece of data.
 
@@ -158,6 +159,7 @@ class Client(object):
                 )
         return comparison
 
+    @check_endpoint
     def get_list_data(self, endpoint: str, params: dict = {}) -> List[dict]:
         """Get list data.
 
