@@ -417,6 +417,26 @@ class Client(object):
         )
         return response.get("id")
 
+    def compare_keypoint(self, source_id: int, target_id: int) -> int:
+        """Start compare for source_id and target_id.
+
+        Args:
+            source_id: The keypoint id of the comparison source.
+            target_id: The keypoint id of the comparison target.
+
+        Returns:
+            comparison_id.
+
+        Raises:
+            RequestsError: HTTP request fails.
+        """
+        url = urljoin(self._api_url, "comparisons/")
+        json = {"source_id": source_id, "target_id": target_id}
+        response = self.session.request(
+            url, method="POST", json=json, token=self.auth.token
+        )
+        return response.get("id")
+
     def wait_for_extraction(self, keypoint_id: int) -> Result:
         """Wait for extraction.
 
@@ -442,6 +462,15 @@ class Client(object):
             RequestsError: HTTP request fails.
         """
         url = urljoin(self._api_url, f"analyses/{analysis_id}/")
+        return self._wait_for_done(url)
+
+    def wait_for_comparison(self, comparison_id: int) -> Result:
+        """Wait for comparison.
+
+        Raises:
+            RequestsError: HTTP request fails.
+        """
+        url = urljoin(self._api_url, f"comparisons/{comparison_id}/")
         return self._wait_for_done(url)
 
     def _wait_for_done(self, url: str) -> Result:

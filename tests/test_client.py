@@ -401,7 +401,7 @@ class TestExtractKeypoint(object):
         assert response.status == "SUCCESS"
 
 
-class TestDrawingKeypoint(object):
+class TestDrawKeypoint(object):
     @pytest.mark.parametrize(
         "kwargs",
         [
@@ -452,7 +452,7 @@ class TestDrawingKeypoint(object):
         assert drawing_url == expected_drawing_url
 
 
-class TestAnalysisKeypoint(object):
+class TestAnalyzeKeypoint(object):
     def test_キーポイント解析を開始できること(self, requests_mock, make_client):
         client = make_client()
         keypoint_id = 111
@@ -475,6 +475,33 @@ class TestAnalysisKeypoint(object):
         )
 
         response = client.wait_for_analysis(analysis_id)
+
+        assert response.status == "SUCCESS"
+
+
+class TestComapreKeypoint(object):
+    def test_can_start_keypoint_comparison(self, requests_mock, make_client):
+        client = make_client()
+        source_id = 111
+        target_id = 222
+        expected_comparison_id = 333
+        requests_mock.post(
+            f"{client._api_url}comparisons/", json={"id": expected_comparison_id}
+        )
+
+        comparison_id = client.compare_keypoint(source_id, target_id)
+
+        assert comparison_id == expected_comparison_id
+
+    def test_can_complete_keypoint_drawing(self, requests_mock, make_client):
+        client = make_client()
+        comparison_id = 333
+        requests_mock.get(
+            f"{client._api_url}comparisons/{comparison_id}/",
+            json={"execStatus": "SUCCESS"},
+        )
+
+        response = client.wait_for_comparison(comparison_id)
 
         assert response.status == "SUCCESS"
 

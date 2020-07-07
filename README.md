@@ -65,6 +65,7 @@ movie = client.get_movie(movie_id)
 keypoint = client.get_keypoint(keypoint_id)
 drawing = client.get_drawing(drawing_id)
 analysis = client.get_analysis(analysis_id)
+comparison = client.get_comparison(comparison_id)
 
 # Get all data
 images = client.get_images()
@@ -72,9 +73,10 @@ movies = client.get_movies()
 keypoints = client.get_keypoints()
 drawings = client.get_drawings()
 analyses = client.get_analyses()
+comparisons = client.get_comparisons()
 ```
 
-In `get_keypoint`, `get_drawing` and `get_analysis`, you can use the `join_data` option to get the relevant data at the same time.
+In `get_keypoint`, `get_drawing`, `get_analysis`, and `get_comparison`, you can use the `join_data` option to get the relevant data at the same time.
 
 ```py
 >>> client.get_keypoint(keypoint_id)
