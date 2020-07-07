@@ -3,7 +3,7 @@ from logging import getLogger
 from typing import Optional
 from urllib.parse import urljoin
 
-from .exceptions import ClientException, ClientValueError
+from .exceptions import ClientException, ClientValueError, ResponseError
 from .session import HttpSession
 
 logger = getLogger(__name__)
@@ -56,10 +56,19 @@ class Authentication(object):
         }
         response = self.session.request(oauth_url, method="POST", json=data)
 
-        self._token = response.get("accessToken")
+        token, issued_at, expires_in = response.get(
+            ("accessToken", "issuedAt", "expiresIn")
+        )
+        if not all([token, issued_at, expires_in]):
+            raise ResponseError("The value of token could not be obtained correctly.")
 
-        issued_at = int(response.get("issuedAt")) / 10 ** 3
-        expires_in = int(response.get("expiresIn"))
+        try:
+            issued_at = int(issued_at) / 10 ** 3
+            expires_in = int(expires_in)
+        except ValueError:
+            raise ResponseError("The value of token could not be obtained correctly.")
+
+        self._token = token
         self.expired_at = issued_at + expires_in
 
     def _is_expired(self, buffer: int = 300) -> bool:
