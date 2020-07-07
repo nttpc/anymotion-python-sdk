@@ -6,6 +6,7 @@ Unreleased
 
 - Added `background_rule` to the parameter of `draw_keypoint`.
 - Added exception handling for getting token.
+- Fixed to stop outputting binary responses in the debug log.
 
 ## 1.1.0
 

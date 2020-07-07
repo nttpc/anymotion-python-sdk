@@ -87,7 +87,8 @@ class HttpSession(object):
 
         logger.debug(f"Received http response: {response}")
         logger.debug(f"Response headers: {response.headers}")
-        logger.debug(f"Response body: {response.text}")
+        if "binary" not in response.headers.get("Content-Type", ""):
+            logger.debug(f"Response body: {response.text}")
 
         self.response_histories.append(response)
         for callback in self.response_callbacks:
