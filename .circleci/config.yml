@@ -96,6 +96,21 @@ jobs:
       - run:
           name: Check security with bandit
           command: poetry run bandit -r anymotion_sdk -s B303
+      - run:
+          name: Check security with yamory
+          environment:
+            PROJECT_GROUP_KEY: anymotion-python-sdk
+          command: |
+            poetry export -f requirements.txt > requirements.txt
+            sh -c "$(curl -sSf -L https://localscanner.yamory.io/script/pip)" > /tmp/yamory_scan_result
+            IMMEDIATE_VULNERABILITIES=$(cat /tmp/yamory_scan_result | grep '^I:[0-9]\{1,\}$' | cut -d ':' -f 2)
+            if [ "${IMMEDIATE_VULNERABILITIES}" = "0" ]; then
+              echo "No immediate vulnerabilities found."
+              exit 0
+            else
+              echo "${IMMEDIATE_VULNERABILITIES} immediate vulnerabilities found."
+              exit 1
+            fi
 
   release:
     executor:
