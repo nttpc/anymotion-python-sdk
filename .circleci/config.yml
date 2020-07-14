@@ -30,9 +30,14 @@ commands:
             - /home/circleci/.cache/pypoetry/virtualenvs
 
 jobs:
-  py38-setup:
+  setup:
+    parameters:
+      version:
+        type: string
+        default: "3.8"
     executor:
       name: python
+      version: << parameters.version >>
     steps:
       - checkout
       - setup_python
@@ -96,6 +101,21 @@ jobs:
       - run:
           name: Check security with bandit
           command: poetry run bandit -r anymotion_sdk -s B303
+      - run:
+          name: Check security with yamory
+          environment:
+            PROJECT_GROUP_KEY: anymotion-python-sdk
+          command: |
+            poetry export -f requirements.txt > requirements.txt
+            sh -c "$(curl -sSf -L https://localscanner.yamory.io/script/pip)" > /tmp/yamory_scan_result
+            IMMEDIATE_VULNERABILITIES=$(cat /tmp/yamory_scan_result | grep '^I:[0-9]\{1,\}$' | cut -d ':' -f 2)
+            if [ "${IMMEDIATE_VULNERABILITIES}" = "0" ]; then
+              echo "No immediate vulnerabilities found."
+              exit 0
+            else
+              echo "${IMMEDIATE_VULNERABILITIES} immediate vulnerabilities found."
+              exit 1
+            fi
 
   release:
     executor:
@@ -113,47 +133,40 @@ jobs:
 workflows:
   workflow:
     jobs:
-      - py38-setup:
+      - setup:
+          matrix:
+            parameters:
+              version: ["3.6", "3.7", "3.8"]
           filters:
             tags:
               only: /.*/
       - test:
-          name: py36-test
-          filters:
-            tags:
-              only: /.*/
-          version: "3.6"
-      - test:
-          name: py37-test
-          filters:
-            tags:
-              only: /.*/
-          version: "3.7"
-      - test:
-          name: py38-test
+          matrix:
+            parameters:
+              version: ["3.6", "3.7", "3.8"]
           filters:
             tags:
               only: /.*/
           requires:
-            - py38-setup
+            - setup
       - measure-coverage:
           filters:
             tags:
               only: /.*/
           requires:
-            - py38-test
+            - test-3.8
       - check-lint:
           filters:
             tags:
               only: /.*/
           requires:
-            - py38-setup
+            - setup-3.8
       - check-security:
           filters:
             tags:
               only: /.*/
           requires:
-            - py38-setup
+            - setup-3.8
       - approval-release:
           type: approval
           filters:
@@ -162,8 +175,7 @@ workflows:
             branches:
               ignore: /.*/
           requires:
-            - py36-test
-            - py37-test
+            - test
             - measure-coverage
             - check-lint
             - check-security
