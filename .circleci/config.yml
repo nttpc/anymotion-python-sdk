@@ -30,9 +30,14 @@ commands:
             - /home/circleci/.cache/pypoetry/virtualenvs
 
 jobs:
-  py38-setup:
+  setup:
+    parameters:
+      version:
+        type: string
+        default: "3.8"
     executor:
       name: python
+      version: << parameters.version >>
     steps:
       - checkout
       - setup_python
@@ -128,47 +133,40 @@ jobs:
 workflows:
   workflow:
     jobs:
-      - py38-setup:
+      - setup:
+          matrix:
+            parameters:
+              version: ["3.6", "3.7", "3.8"]
           filters:
             tags:
               only: /.*/
       - test:
-          name: py36-test
-          filters:
-            tags:
-              only: /.*/
-          version: "3.6"
-      - test:
-          name: py37-test
-          filters:
-            tags:
-              only: /.*/
-          version: "3.7"
-      - test:
-          name: py38-test
+          matrix:
+            parameters:
+              version: ["3.6", "3.7", "3.8"]
           filters:
             tags:
               only: /.*/
           requires:
-            - py38-setup
+            - setup
       - measure-coverage:
           filters:
             tags:
               only: /.*/
           requires:
-            - py38-test
+            - test-3.8
       - check-lint:
           filters:
             tags:
               only: /.*/
           requires:
-            - py38-setup
+            - setup-3.8
       - check-security:
           filters:
             tags:
               only: /.*/
           requires:
-            - py38-setup
+            - setup-3.8
       - approval-release:
           type: approval
           filters:
@@ -177,8 +175,7 @@ workflows:
             branches:
               ignore: /.*/
           requires:
-            - py36-test
-            - py37-test
+            - test
             - measure-coverage
             - check-lint
             - check-security
