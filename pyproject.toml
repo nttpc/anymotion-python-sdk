@@ -25,7 +25,7 @@ cv = ["opencv-python"]
 [tool.poetry.dev-dependencies]
 bandit = "^1.6.2"
 black = "^19.10b0"
-coverage = "^5.1.0"
+coverage = "^5.2"
 flake8 = "^3.7.9"
 flake8-docstrings = "^1.5.0"
 isort = "^5.1.4"
