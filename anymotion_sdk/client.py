@@ -11,7 +11,7 @@ from .auth import Authentication
 from .exceptions import ClientException, ClientValueError, ExtraPackageError
 from .response import Result
 from .session import HttpSession
-from .utils import create_md5, get_media_type, check_endpoint
+from .utils import check_endpoint, create_md5, get_media_type
 
 logger = getLogger(__name__)
 UploadResult = namedtuple("UploadResult", ("image_id", "movie_id"))
