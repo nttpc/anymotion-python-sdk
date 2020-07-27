@@ -84,13 +84,13 @@ jobs:
           command: poetry run flake8
       - run:
           name: Lint with black
-          command: poetry run black . --check
+          command: poetry run black . --check  --diff
       - run:
           name: Lint with mypy
           command: poetry run mypy
       - run:
           name: Lint with isort
-          command: poetry run isort --check-only
+          command: poetry run isort . --check  --diff
 
   check-security:
     executor:

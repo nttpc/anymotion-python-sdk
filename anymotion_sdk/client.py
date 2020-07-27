@@ -11,7 +11,7 @@ from .auth import Authentication
 from .exceptions import ClientException, ClientValueError, ExtraPackageError
 from .response import Result
 from .session import HttpSession
-from .utils import create_md5, get_media_type
+from .utils import check_endpoint, create_md5, get_media_type
 
 logger = getLogger(__name__)
 UploadResult = namedtuple("UploadResult", ("image_id", "movie_id"))
@@ -87,11 +87,12 @@ class Client(object):
 
         self._page_size = 1000
 
+    @check_endpoint
     def get_one_data(self, endpoint: str, endpoint_id: int) -> dict:
         """Get one piece of data.
 
         Args:
-            endpoint: images, movies, keypoints, drawings, or analyses
+            endpoint: images, movies, keypoints, drawings, analyses, or comparisons
             endpoint_id
 
         Returns:
@@ -142,8 +143,30 @@ class Client(object):
                 analysis["keypoint"] = self.get_keypoint(keypoint_id, join_data=True)
         return analysis
 
+    def get_comparison(self, comparison_id: int, join_data: bool = False) -> dict:
+        """Get comparisons data."""
+        comparison = self.get_one_data("comparisons", comparison_id)
+        if join_data:
+            source_keypoint_id = comparison.get("source")
+            target_keypoint_id = comparison.get("target")
+            if source_keypoint_id:
+                comparison["source"] = self.get_keypoint(
+                    source_keypoint_id, join_data=True
+                )
+            if target_keypoint_id:
+                comparison["target"] = self.get_keypoint(
+                    target_keypoint_id, join_data=True
+                )
+        return comparison
+
+    @check_endpoint
     def get_list_data(self, endpoint: str, params: dict = {}) -> List[dict]:
         """Get list data.
+
+        Args:
+            endpoint: images, movies, keypoints, drawings, analyses, or comparisons
+            endpoint_id
+            params
 
         Raises:
             RequestsError: HTTP request fails.
@@ -177,6 +200,10 @@ class Client(object):
     def get_analyses(self, params: dict = {}) -> List[dict]:
         """Get analysis list."""
         return self.get_list_data("analyses", params=params)
+
+    def get_comparisons(self, params: dict = {}) -> List[dict]:
+        """Get comparisons list."""
+        return self.get_list_data("comparisons", params=params)
 
     def upload(
         self, path: Union[str, Path], text: Optional[str] = None
@@ -390,6 +417,26 @@ class Client(object):
         )
         return response.get("id")
 
+    def compare_keypoint(self, source_id: int, target_id: int) -> int:
+        """Start compare for source_id and target_id.
+
+        Args:
+            source_id: The keypoint id of the comparison source.
+            target_id: The keypoint id of the comparison target.
+
+        Returns:
+            comparison_id.
+
+        Raises:
+            RequestsError: HTTP request fails.
+        """
+        url = urljoin(self._api_url, "comparisons/")
+        json = {"source_id": source_id, "target_id": target_id}
+        response = self.session.request(
+            url, method="POST", json=json, token=self.auth.token
+        )
+        return response.get("id")
+
     def wait_for_extraction(self, keypoint_id: int) -> Result:
         """Wait for extraction.
 
@@ -415,6 +462,15 @@ class Client(object):
             RequestsError: HTTP request fails.
         """
         url = urljoin(self._api_url, f"analyses/{analysis_id}/")
+        return self._wait_for_done(url)
+
+    def wait_for_comparison(self, comparison_id: int) -> Result:
+        """Wait for comparison.
+
+        Raises:
+            RequestsError: HTTP request fails.
+        """
+        url = urljoin(self._api_url, f"comparisons/{comparison_id}/")
         return self._wait_for_done(url)
 
     def _wait_for_done(self, url: str) -> Result:

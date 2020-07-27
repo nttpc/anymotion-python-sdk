@@ -253,6 +253,48 @@ class TestGetAnalysis(object):
         assert result == expected
 
 
+class TestGetComparison(object):
+    def test_without_join_data(self, requests_mock, make_client):
+        client = make_client()
+        comparison = {"id": 1, "source": 2, "target": 3}
+        requests_mock.get(
+            f"{client._api_url}comparisons/1/", json=comparison,
+        )
+        result = client.get_comparison(1)
+
+        assert result == comparison
+
+    def test_with_join_data(self, requests_mock, make_client):
+        client = make_client()
+        comparison = {"id": 1, "source": 2, "target": 3}
+        source = {
+            "id": 2,
+            "image": 3,
+            "movie": None,
+            "keypoint": [{"nose": [10, 20]}],
+        }
+        target = {
+            "id": 3,
+            "image": 3,
+            "movie": None,
+            "keypoint": [{"nose": [10, 20]}],
+        }
+        image = {"id": 3, "name": "image"}
+        requests_mock.get(f"{client._api_url}comparisons/1/", json=comparison)
+        requests_mock.get(f"{client._api_url}keypoints/2/", json=source)
+        requests_mock.get(f"{client._api_url}keypoints/3/", json=target)
+        requests_mock.get(f"{client._api_url}images/3/", json=image)
+
+        result = client.get_comparison(1, join_data=True)
+
+        expected = comparison
+        expected["source"] = source
+        expected["source"]["image"] = image
+        expected["target"] = target
+        expected["target"]["image"] = image
+        assert result == expected
+
+
 class TestUpload(object):
     @pytest.mark.parametrize(
         "expected_media_type, path",
@@ -359,7 +401,7 @@ class TestExtractKeypoint(object):
         assert response.status == "SUCCESS"
 
 
-class TestDrawingKeypoint(object):
+class TestDrawKeypoint(object):
     @pytest.mark.parametrize(
         "kwargs",
         [
@@ -410,7 +452,7 @@ class TestDrawingKeypoint(object):
         assert drawing_url == expected_drawing_url
 
 
-class TestAnalysisKeypoint(object):
+class TestAnalyzeKeypoint(object):
     def test_キーポイント解析を開始できること(self, requests_mock, make_client):
         client = make_client()
         keypoint_id = 111
@@ -433,6 +475,33 @@ class TestAnalysisKeypoint(object):
         )
 
         response = client.wait_for_analysis(analysis_id)
+
+        assert response.status == "SUCCESS"
+
+
+class TestComapreKeypoint(object):
+    def test_can_start_keypoint_comparison(self, requests_mock, make_client):
+        client = make_client()
+        source_id = 111
+        target_id = 222
+        expected_comparison_id = 333
+        requests_mock.post(
+            f"{client._api_url}comparisons/", json={"id": expected_comparison_id}
+        )
+
+        comparison_id = client.compare_keypoint(source_id, target_id)
+
+        assert comparison_id == expected_comparison_id
+
+    def test_can_complete_keypoint_drawing(self, requests_mock, make_client):
+        client = make_client()
+        comparison_id = 333
+        requests_mock.get(
+            f"{client._api_url}comparisons/{comparison_id}/",
+            json={"execStatus": "SUCCESS"},
+        )
+
+        response = client.wait_for_comparison(comparison_id)
 
         assert response.status == "SUCCESS"
 

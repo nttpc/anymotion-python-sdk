@@ -10,7 +10,18 @@ logger = getLogger(__name__)
 
 
 class Authentication(object):
-    """Authenticate to AnyMotion."""
+    """Authenticate to AnyMotion.
+
+    If the token is missing or expired when you access the token property,
+    you will get the token.
+
+    Attributes:
+        client_id (str)
+        client_secret (str)
+        base_url (str)
+        session (HttpSession)
+        expired_at (int): The expiration date(unix time) of the acquired token.
+    """
 
     def __init__(
         self,

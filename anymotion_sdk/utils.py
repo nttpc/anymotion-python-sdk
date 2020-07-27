@@ -1,11 +1,21 @@
 import base64
 import hashlib
+import inspect
+from functools import wraps
 from pathlib import Path
 
-from .exceptions import FileTypeError
+from .exceptions import ClientException, FileTypeError
 
 MOVIE_SUFFIXES = [".mp4", ".mov"]
 IMAGE_SUFFIXES = [".jpg", ".jpeg", ".png"]
+AVAILABLE_ENDPOINTS = [
+    "images",
+    "movies",
+    "keypoints",
+    "drawings",
+    "analyses",
+    "comparisons",
+]
 
 
 def create_md5(path: Path) -> str:
@@ -30,3 +40,20 @@ def get_media_type(path: Path) -> str:
             f"{', '.join(suffix[:-1])} or {suffix[-1]}."
         )
         raise FileTypeError(message)
+
+
+def check_endpoint(func):
+    """Check available endpoint."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        sig = inspect.signature(func)
+        args_value = sig.bind(*args, **kwargs)
+        endpoint = args_value.arguments["endpoint"]
+
+        if endpoint not in AVAILABLE_ENDPOINTS:
+            raise ClientException(f"Unavailable endpoints: {endpoint}")
+
+        return func(*args, **kwargs)
+
+    return wrapper
