@@ -9,6 +9,7 @@ Unreleased
 - Added exception handling for getting token.
 - Changed the color model in `download_and_read` from BGR to RGB.
 - Fixed to stop outputting binary responses in the debug log.
+- Fixed opencv-python version to 4.2.
 
 ## 1.1.0
 
