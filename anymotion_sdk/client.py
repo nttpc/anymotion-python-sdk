@@ -365,14 +365,16 @@ class Client(object):
 
     def draw_keypoint(
         self,
-        keypoint_id: int,
+        keypoint_id: Optional[int] = None,
+        comparison_id: Optional[int] = None,
         rule: Optional[Union[list, dict]] = None,
         background_rule: Optional[dict] = None,
     ) -> int:
-        """Start drawing for keypoint_id.
+        """Start drawing for keypoint_id or comparison_id.
 
         Args:
             keypoint_id: Keypoint ID used for drawing.
+            comparison_id: Comparison ID used for drawing.
             rule: Rules for how to draw.
                 example: {
                     "drawingType": "stickPicture",
@@ -388,8 +390,15 @@ class Client(object):
         Raises:
             RequestsError: HTTP request fails.
         """
+        if [keypoint_id, comparison_id].count(None) != 1:
+            raise ValueError("Either keypoint_id or comparison_id is required.")
+
         url = urljoin(self._api_url, "drawings/")
-        json: Dict[str, Union[int, list, dict]] = {"keypoint_id": keypoint_id}
+        json: Dict[str, Union[int, list, dict]] = {}
+        if keypoint_id is not None:
+            json["keypoint_id"] = keypoint_id
+        if comparison_id is not None:
+            json["comparison_id"] = comparison_id
         if rule is not None:
             json["rule"] = rule
         if background_rule is not None:
