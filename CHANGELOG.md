@@ -7,6 +7,7 @@ Unreleased
 - Added `get_comparison` and `get_comparisons` to be able to use AnyMotion's new feature, comparison.
 - Added `background_rule` to the parameter of `draw_keypoint`.
 - Added exception handling for getting token.
+- Made it passible to draw comparison results using `draw_keypoint`.
 - Changed the color model in `download_and_read` from BGR to RGB.
 - Fixed to stop outputting binary responses in the debug log.
 - Fixed opencv-python version to 4.2.

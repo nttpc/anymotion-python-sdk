@@ -403,7 +403,10 @@ class TestExtractKeypoint(object):
 
 class TestDrawKeypoint(object):
     @pytest.mark.parametrize(
-        "kwargs",
+        "id_kwargs", [{"keypoint_id": 111}, {"comparison_id": 111}]
+    )
+    @pytest.mark.parametrize(
+        "rule_kwargs",
         [
             {},
             {
@@ -411,30 +414,36 @@ class TestDrawKeypoint(object):
                     "drawing_type": "stickPicture",
                     "pattern": "all",
                     "color": "red",
-                }
-            },
-            {"background_rule": {"skeletonOnly": True}},
-            {
-                "rule": {
-                    "drawing_type": "stickPicture",
-                    "pattern": "all",
-                    "color": "red",
                 },
-                "background_rule": {"skeletonOnly": True},
             },
         ],
     )
-    def test_can_start_keypoint_drawing(self, requests_mock, make_client, kwargs):
+    @pytest.mark.parametrize(
+        "bgrule_kwargs", [{}, {"background_rule": {"skeletonOnly": True}}],
+    )
+    def test_can_start_keypoint_drawing(
+        self, requests_mock, make_client, id_kwargs, rule_kwargs, bgrule_kwargs
+    ):
         client = make_client()
-        keypoint_id = 111
         expected_drawing_id = 222
         requests_mock.post(
             f"{client._api_url}drawings/", json={"id": expected_drawing_id}
         )
 
-        drawing_id = client.draw_keypoint(keypoint_id, **kwargs)
+        kwargs = dict(id_kwargs, **rule_kwargs, **bgrule_kwargs)
+        drawing_id = client.draw_keypoint(**kwargs)
 
         assert drawing_id == expected_drawing_id
+
+    @pytest.mark.parametrize("kwargs", [{}, {"keypoint_id": 111, "comparison_id": 111}])
+    def test_can_not_start_keypoint_drawing(self, requests_mock, make_client, kwargs):
+        expected = "Either keypoint_id or comparison_id is required."
+        client = make_client()
+
+        with pytest.raises(ValueError) as excinfo:
+            client.draw_keypoint(**kwargs)
+
+        assert str(excinfo.value) == expected
 
     def test_can_complete_keypoint_drawing(self, requests_mock, make_client):
         client = make_client()
