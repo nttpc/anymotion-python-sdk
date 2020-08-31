@@ -16,8 +16,10 @@ def make_client(mocker):
         api_url="http://api.example.com/anymotion/v1/",
         interval=5,
         timeout=600,
-        session=HttpSession(),
+        session=None,
     ):
+        if session is None:
+            session = HttpSession()
         client = Client(client_id, client_secret, api_url, interval, timeout, session)
         auth_mock = mocker.MagicMock()
         auth_mock.token = "token"

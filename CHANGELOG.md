@@ -5,6 +5,8 @@
 Unreleased
 
 - Changed file download to stream processing.
+- Fixed a noted issue with flake8-bugbear.
+  (e.g. do not perform function calls in argument defaults.)
 
 ## 1.2.0
 

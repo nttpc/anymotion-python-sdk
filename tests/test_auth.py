@@ -6,7 +6,12 @@ from anymotion_sdk.exceptions import ResponseError
 
 @pytest.fixture
 def make_auth(requests_mock):
-    def _make_auth(tokens=["token"], issued_ats=["1580000000000"]):
+    def _make_auth(tokens=None, issued_ats=None):
+        if tokens is None:
+            tokens = ["token"]
+        if issued_ats is None:
+            issued_ats = ["1580000000000"]
+
         auth = Authentication("client_id", "client_secret")
         requests_mock.register_uri(
             "POST",
