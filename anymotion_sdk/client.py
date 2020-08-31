@@ -86,6 +86,7 @@ class Client(object):
         self._max_steps = int(max(1, timeout / self._interval))
 
         self._page_size = 1000
+        self._chunk_size = 1024 * 1024  # 1MB
 
     @check_endpoint
     def get_one_data(self, endpoint: str, endpoint_id: int) -> dict:
@@ -302,9 +303,10 @@ class Client(object):
             logger.error(f"File exists: {path}")
             raise FileExistsError(f"File exists: {path}")
 
-        response = self.session.request(url)
+        response = self.session.request(url, stream=True)
         with path.open("wb") as f:
-            f.write(response.raw.content)
+            for chunk in response.raw.iter_content(chunk_size=self._chunk_size):
+                f.write(chunk)
         logger.info(f"Download file to {path}.")
 
         return path
