@@ -4,7 +4,7 @@ from collections import namedtuple
 from logging import getLogger
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union, cast
 from urllib.parse import urljoin, urlparse, urlunparse
 
 from .auth import Authentication
@@ -15,6 +15,7 @@ from .utils import check_endpoint, create_md5, get_media_type
 
 logger = getLogger(__name__)
 UploadResult = namedtuple("UploadResult", ("image_id", "movie_id"))
+DEFAULT_ANYMOTION_API_URL = "https://api.customer.jp/anymotion/v1/"
 
 
 class Client(object):
@@ -32,14 +33,12 @@ class Client(object):
 
     def __init__(
         self,
-        client_id: str = os.getenv("ANYMOTION_CLIENT_ID", ""),
-        client_secret: str = os.getenv("ANYMOTION_CLIENT_SECRET", ""),
-        api_url: str = os.getenv(
-            "ANYMOTION_API_URL", "https://api.customer.jp/anymotion/v1/"
-        ),
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        api_url: Optional[str] = None,
         interval: Union[int, float] = 5,
         timeout: Union[int, float] = 600,
-        session: HttpSession = HttpSession(),
+        session: Optional[HttpSession] = None,
     ):
         """Initialize the client.
 
@@ -62,21 +61,28 @@ class Client(object):
         """
         logger.debug("Initializing client.")
 
-        if not isinstance(session, HttpSession):
+        if client_id is None:
+            client_id = os.getenv("ANYMOTION_CLIENT_ID", "")
+        client_id = cast(str, client_id)
+
+        if client_secret is None:
+            client_secret = os.getenv("ANYMOTION_CLIENT_SECRET", "")
+        client_secret = cast(str, client_secret)
+
+        if api_url is None:
+            api_url = os.getenv("ANYMOTION_API_URL", DEFAULT_ANYMOTION_API_URL)
+        api_url = cast(str, api_url)
+
+        if session is None:
+            session = HttpSession()
+        elif not isinstance(session, HttpSession):
             raise ClientValueError(
                 f"session is must be HttpSession class: {type(session)}"
             )
         self.session = session
 
-        parts = urlparse(api_url)
-        api_path = parts.path
-        if "anymotion" not in api_path:
-            raise ClientValueError(f"Invalid API URL: {api_url}")
-        if api_path[-1] != "/":
-            api_path += "/"
-
-        base_url = str(urlunparse((parts.scheme, parts.netloc, "", "", "", "")))
-        self._api_url = urljoin(base_url, api_path)
+        base_url, api_path = self._check_and_parse_api_url(api_url)
+        self._api_url: str = urljoin(base_url, api_path)
 
         self.auth = Authentication(
             client_id, client_secret, base_url=base_url, session=self.session
@@ -87,6 +93,17 @@ class Client(object):
 
         self._page_size = 1000
         self._chunk_size = 1024 * 1024  # 1MB
+
+    def _check_and_parse_api_url(self, api_url: str) -> Tuple[str, str]:
+        parts = urlparse(api_url)
+        api_path = parts.path
+        if "anymotion" not in api_path:
+            raise ClientValueError(f"Invalid API URL: {api_url}")
+        if api_path[-1] != "/":
+            api_path += "/"
+
+        base_url = str(urlunparse((parts.scheme, parts.netloc, "", "", "", "")))
+        return base_url, api_path
 
     @check_endpoint
     def get_one_data(self, endpoint: str, endpoint_id: int) -> dict:
@@ -161,7 +178,7 @@ class Client(object):
         return comparison
 
     @check_endpoint
-    def get_list_data(self, endpoint: str, params: dict = {}) -> List[dict]:
+    def get_list_data(self, endpoint: str, params: Optional[dict] = None) -> List[dict]:
         """Get list data.
 
         Args:
@@ -172,6 +189,9 @@ class Client(object):
         Raises:
             RequestsError: HTTP request fails.
         """
+        if params is None:
+            params = {}
+
         url = urljoin(self._api_url, f"{endpoint}/")
         params["size"] = self._page_size
         data: List[dict] = []
@@ -182,27 +202,27 @@ class Client(object):
             data += sub_data
         return data
 
-    def get_images(self, params: dict = {}) -> List[dict]:
+    def get_images(self, params: Optional[dict] = None) -> List[dict]:
         """Get image list."""
         return self.get_list_data("images", params=params)
 
-    def get_movies(self, params: dict = {}) -> List[dict]:
+    def get_movies(self, params: Optional[dict] = None) -> List[dict]:
         """Get movie list."""
         return self.get_list_data("movies", params=params)
 
-    def get_keypoints(self, params: dict = {}) -> List[dict]:
+    def get_keypoints(self, params: Optional[dict] = None) -> List[dict]:
         """Get keypoint list."""
         return self.get_list_data("keypoints", params=params)
 
-    def get_drawings(self, params: dict = {}) -> List[dict]:
+    def get_drawings(self, params: Optional[dict] = None) -> List[dict]:
         """Get drawing list."""
         return self.get_list_data("drawings", params=params)
 
-    def get_analyses(self, params: dict = {}) -> List[dict]:
+    def get_analyses(self, params: Optional[dict] = None) -> List[dict]:
         """Get analysis list."""
         return self.get_list_data("analyses", params=params)
 
-    def get_comparisons(self, params: dict = {}) -> List[dict]:
+    def get_comparisons(self, params: Optional[dict] = None) -> List[dict]:
         """Get comparisons list."""
         return self.get_list_data("comparisons", params=params)
 
