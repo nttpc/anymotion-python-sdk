@@ -2,7 +2,7 @@
 
 ## 1.2.1
 
-Unreleased
+Released 2020-09-01
 
 - Changed file download to stream processing.
 - Fixed a noted issue with flake8-bugbear.

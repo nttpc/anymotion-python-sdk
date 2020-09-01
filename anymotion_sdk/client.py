@@ -94,17 +94,6 @@ class Client(object):
         self._page_size = 1000
         self._chunk_size = 1024 * 1024  # 1MB
 
-    def _check_and_parse_api_url(self, api_url: str) -> Tuple[str, str]:
-        parts = urlparse(api_url)
-        api_path = parts.path
-        if "anymotion" not in api_path:
-            raise ClientValueError(f"Invalid API URL: {api_url}")
-        if api_path[-1] != "/":
-            api_path += "/"
-
-        base_url = str(urlunparse((parts.scheme, parts.netloc, "", "", "", "")))
-        return base_url, api_path
-
     @check_endpoint
     def get_one_data(self, endpoint: str, endpoint_id: int) -> dict:
         """Get one piece of data.
@@ -279,15 +268,17 @@ class Client(object):
         path: Optional[Union[str, Path]] = None,
         exist_ok: bool = False,
         fix_suffix: bool = False,
+        stream: bool = True,
     ) -> Path:
         """Download a file from drawing_id.
 
         Args:
             drawing_id
-            path: output file path or directory path.
-            exist_ok: if false (default), FileExistsError is raised if the target file
+            path: The output file path or directory path.
+            exist_ok: If false (default), FileExistsError is raised if the target file
                 already exists.
             fix_suffix: If the extension of path is invalid, correct it.
+            stream: If true (default), steram download.
 
         Returns:
             The path to the downloaded file.
@@ -323,10 +314,13 @@ class Client(object):
             logger.error(f"File exists: {path}")
             raise FileExistsError(f"File exists: {path}")
 
-        response = self.session.request(url, stream=True)
+        response = self.session.request(url, stream=stream)
         with path.open("wb") as f:
-            for chunk in response.raw.iter_content(chunk_size=self._chunk_size):
-                f.write(chunk)
+            if stream:
+                for chunk in response.raw.iter_content(chunk_size=self._chunk_size):
+                    f.write(chunk)
+            else:
+                f.write(response.raw.content)
         logger.info(f"Download file to {path}.")
 
         return path
@@ -514,3 +508,14 @@ class Client(object):
         else:
             result.status = "TIMEOUT"
         return result
+
+    def _check_and_parse_api_url(self, api_url: str) -> Tuple[str, str]:
+        parts = urlparse(api_url)
+        api_path = parts.path
+        if "anymotion" not in api_path:
+            raise ClientValueError(f"Invalid API URL: {api_url}")
+        if api_path[-1] != "/":
+            api_path += "/"
+
+        base_url = str(urlunparse((parts.scheme, parts.netloc, "", "", "", "")))
+        return base_url, api_path
