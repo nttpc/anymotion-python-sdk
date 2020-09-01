@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "anymotion-sdk"
-version = "1.2.1-dev"
+version = "1.2.1"
 description = "AnyMotion SDK for Python"
 authors = ["Yusuke Kumihashi <y_kumiha@nttpc.co.jp>"]
 readme = "README.md"
