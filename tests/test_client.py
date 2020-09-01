@@ -530,6 +530,7 @@ class TestDownload(object):
         client.download(111, path)
 
         assert expected_path.exists()
+        assert expected_path.read_bytes() == b"image data"
 
     def test_str_path(self, tmp_path, requests_mock, make_client, setup):
         client = make_client()
@@ -543,6 +544,7 @@ class TestDownload(object):
         client.download(111, str(path))
 
         assert expected_path.exists()
+        assert expected_path.read_bytes() == b"image data"
 
     def test_no_path(self, tmp_path, monkeypatch, requests_mock, make_client, setup):
         monkeypatch.chdir(tmp_path)
@@ -556,6 +558,7 @@ class TestDownload(object):
         client.download(111)
 
         assert expected_path.exists()
+        assert expected_path.read_bytes() == b"image data"
 
     def test_directory_path(self, tmp_path, requests_mock, make_client, setup):
         client = make_client()
@@ -569,6 +572,7 @@ class TestDownload(object):
         client.download(111, path)
 
         assert expected_path.exists()
+        assert expected_path.read_bytes() == b"image data"
 
     @pytest.mark.parametrize(
         "fix_suffix, expected_file_name", [(True, "image.jpg"), (False, "image.png")]
@@ -593,6 +597,7 @@ class TestDownload(object):
         client.download(111, path, fix_suffix=fix_suffix)
 
         assert expected_path.exists()
+        assert expected_path.read_bytes() == b"image data"
 
     def test_no_url(self, tmp_path, requests_mock, make_client, setup):
         client = make_client()
@@ -604,6 +609,19 @@ class TestDownload(object):
 
         with pytest.raises(ClientException):
             client.download(111, path)
+
+    def test_stream_false(self, tmp_path, requests_mock, make_client, setup):
+        client = make_client()
+        setup(client)
+
+        path = tmp_path / "image.jpg"
+
+        assert not path.exists()
+
+        client.download(111, path, stream=False)
+
+        assert path.exists()
+        assert path.read_bytes() == b"image data"
 
     def test_exists_file(self, tmp_path, requests_mock, make_client, setup):
         client = make_client()
