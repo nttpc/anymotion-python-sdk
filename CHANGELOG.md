@@ -1,10 +1,18 @@
 # Change Log
 
+## 1.2.1
+
+Released 2020-09-01
+
+- Changed file download to stream processing.
+- Fixed a noted issue with flake8-bugbear.
+  (e.g. do not perform function calls in argument defaults.)
+
 ## 1.2.0
 
 Released 2020-08-20
 
-- Added `get_comparison` and `get_comparisons` to be able to use AnyMotion's new feature, comparison.
+- Added `compare_keypoint`, `get_comparison`, and `get_comparisons` to be able to use AnyMotion's new feature, comparison.
 - Added `background_rule` to the parameter of `draw_keypoint`.
 - Added exception handling for getting token.
 - Made it passible to draw comparison results using `draw_keypoint`.

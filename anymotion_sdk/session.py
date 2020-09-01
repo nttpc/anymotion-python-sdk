@@ -49,6 +49,7 @@ class HttpSession(object):
         json: Any = None,
         headers: Optional[dict] = None,
         token: str = None,
+        stream: bool = False,
     ) -> HttpResponse:
         """Execute the request.
 
@@ -80,7 +81,7 @@ class HttpSession(object):
             callback(request)
 
         try:
-            response = self.session.send(prepped)
+            response = self.session.send(prepped, stream=stream)
         except requests.ConnectionError:
             self.request_histories.pop()
             raise RequestsError(f"{method} {url} is failed.")
