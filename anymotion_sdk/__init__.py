@@ -3,8 +3,7 @@
 import logging
 from typing import Optional
 
-import pkg_resources
-
+from ._version import __version__  # noqa: F401
 from .client import Client  # noqa: F401
 from .exceptions import (  # noqa: F401
     ClientValueError,
@@ -12,8 +11,6 @@ from .exceptions import (  # noqa: F401
     RequestsError,
     ResponseError,
 )
-
-__version__ = pkg_resources.get_distribution(__name__).version
 
 
 def set_stream_logger(

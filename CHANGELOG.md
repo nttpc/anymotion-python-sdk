@@ -1,5 +1,9 @@
 # Change Log
 
+Unreleased
+
+- Changed User-Agent on HTTP request to anymotion-sdk/x.y.z.
+
 ## 1.2.1
 
 Released 2020-09-01

@@ -7,6 +7,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from ._version import __version__
 from .exceptions import RequestsError
 from .response import HttpResponse
 
@@ -61,6 +62,7 @@ class HttpSession(object):
             raise RequestsError("HTTP method is invalid.")
 
         headers = headers or {}
+        headers["User-Agent"] = f"anymotion-sdk/{__version__}"
         if json:
             headers["Content-Type"] = "application/json"
         if token:
