@@ -65,7 +65,8 @@ class TestGetData(object):
         client = make_client()
         data = {"id": 1, "name": "image"}
         requests_mock.get(
-            f"{client._api_url}images/1/", json=data,
+            f"{client._api_url}images/1/",
+            json=data,
         )
         result = client.get_one_data("images", 1)
 
@@ -75,7 +76,8 @@ class TestGetData(object):
         client = make_client()
         data = {"id": 1, "name": "image"}
         requests_mock.get(
-            f"{client._api_url}images/1/", json=data,
+            f"{client._api_url}images/1/",
+            json=data,
         )
         result = client.get_image(1)
 
@@ -85,7 +87,8 @@ class TestGetData(object):
         client = make_client()
         data = {"id": 1, "name": "movie"}
         requests_mock.get(
-            f"{client._api_url}movies/1/", json=data,
+            f"{client._api_url}movies/1/",
+            json=data,
         )
         result = client.get_movie(1)
 
@@ -130,7 +133,8 @@ class TestGetKeypoint(object):
         client = make_client()
         data = {"id": 1, "image": 2, "movie": None, "keypoint": [{"nose": [10, 20]}]}
         requests_mock.get(
-            f"{client._api_url}keypoints/1/", json=data,
+            f"{client._api_url}keypoints/1/",
+            json=data,
         )
         result = client.get_keypoint(1)
 
@@ -146,10 +150,12 @@ class TestGetKeypoint(object):
         }
         image = {"id": 2, "name": "image"}
         requests_mock.get(
-            f"{client._api_url}keypoints/1/", json=keypoint,
+            f"{client._api_url}keypoints/1/",
+            json=keypoint,
         )
         requests_mock.get(
-            f"{client._api_url}images/2/", json=image,
+            f"{client._api_url}images/2/",
+            json=image,
         )
         result = client.get_keypoint(1, join_data=True)
 
@@ -167,10 +173,12 @@ class TestGetKeypoint(object):
         }
         movie = {"id": 2, "name": "movie"}
         requests_mock.get(
-            f"{client._api_url}keypoints/1/", json=keypoint,
+            f"{client._api_url}keypoints/1/",
+            json=keypoint,
         )
         requests_mock.get(
-            f"{client._api_url}movies/2/", json=movie,
+            f"{client._api_url}movies/2/",
+            json=movie,
         )
         result = client.get_keypoint(1, join_data=True)
 
@@ -184,7 +192,8 @@ class TestGetDrawing(object):
         client = make_client()
         data = {"id": 1, "keypoint": 2}
         requests_mock.get(
-            f"{client._api_url}drawings/1/", json=data,
+            f"{client._api_url}drawings/1/",
+            json=data,
         )
         result = client.get_drawing(1)
 
@@ -201,13 +210,16 @@ class TestGetDrawing(object):
         }
         image = {"id": 3, "name": "image"}
         requests_mock.get(
-            f"{client._api_url}drawings/1/", json=drawing,
+            f"{client._api_url}drawings/1/",
+            json=drawing,
         )
         requests_mock.get(
-            f"{client._api_url}keypoints/2/", json=keypoint,
+            f"{client._api_url}keypoints/2/",
+            json=keypoint,
         )
         requests_mock.get(
-            f"{client._api_url}images/3/", json=image,
+            f"{client._api_url}images/3/",
+            json=image,
         )
         result = client.get_drawing(1, join_data=True)
 
@@ -222,7 +234,8 @@ class TestGetAnalysis(object):
         client = make_client()
         data = {"id": 1, "keypoint": 2}
         requests_mock.get(
-            f"{client._api_url}analyses/1/", json=data,
+            f"{client._api_url}analyses/1/",
+            json=data,
         )
         result = client.get_analysis(1)
 
@@ -239,13 +252,16 @@ class TestGetAnalysis(object):
         }
         image = {"id": 3, "name": "image"}
         requests_mock.get(
-            f"{client._api_url}analyses/1/", json=analysis,
+            f"{client._api_url}analyses/1/",
+            json=analysis,
         )
         requests_mock.get(
-            f"{client._api_url}keypoints/2/", json=keypoint,
+            f"{client._api_url}keypoints/2/",
+            json=keypoint,
         )
         requests_mock.get(
-            f"{client._api_url}images/3/", json=image,
+            f"{client._api_url}images/3/",
+            json=image,
         )
         result = client.get_analysis(1, join_data=True)
 
@@ -260,7 +276,8 @@ class TestGetComparison(object):
         client = make_client()
         comparison = {"id": 1, "source": 2, "target": 3}
         requests_mock.get(
-            f"{client._api_url}comparisons/1/", json=comparison,
+            f"{client._api_url}comparisons/1/",
+            json=comparison,
         )
         result = client.get_comparison(1)
 
@@ -421,7 +438,8 @@ class TestDrawKeypoint(object):
         ],
     )
     @pytest.mark.parametrize(
-        "bgrule_kwargs", [{}, {"background_rule": {"skeletonOnly": True}}],
+        "bgrule_kwargs",
+        [{}, {"background_rule": {"skeletonOnly": True}}],
     )
     def test_can_start_keypoint_drawing(
         self, requests_mock, make_client, id_kwargs, rule_kwargs, bgrule_kwargs

@@ -69,7 +69,12 @@ class HttpSession(object):
             headers["Authorization"] = f"Bearer {token}"
 
         request = requests.Request(
-            method, url, params=params, data=data, json=json, headers=headers,
+            method,
+            url,
+            params=params,
+            data=data,
+            json=json,
+            headers=headers,
         )
         prepped = request.prepare()
 
