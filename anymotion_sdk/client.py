@@ -113,11 +113,23 @@ class Client(object):
         return response.json
 
     def get_image(self, image_id: int) -> dict:
-        """Get image data."""
+        """Get image data.
+
+        Gets a single image data.
+        If you want to get more than one image data, use `get_images`.
+
+        Same as requesting GET /images/{image_id} directly.
+        """
         return self.get_one_data("images", image_id)
 
     def get_movie(self, movie_id: int) -> dict:
-        """Get movie data."""
+        """Get movie data.
+
+        Gets a single movie data.
+        If you want to get more than one movie data, use `get_movies`.
+
+        Same as requesting GET /movies/{movie_id} directly.
+        """
         return self.get_one_data("movies", movie_id)
 
     def get_keypoint(self, keypoint_id: int, join_data: bool = False) -> dict:
