@@ -41,6 +41,8 @@ class HttpSession(object):
         self.request_callbacks: List[Callable] = []
         self.response_callbacks: List[Callable] = []
 
+        self.user_agent = f"anymotion-sdk/{__version__}"
+
     def request(
         self,
         url: str,
@@ -62,14 +64,19 @@ class HttpSession(object):
             raise RequestsError("HTTP method is invalid.")
 
         headers = headers or {}
-        headers["User-Agent"] = f"anymotion-sdk/{__version__}"
+        headers["User-Agent"] = self.user_agent
         if json:
             headers["Content-Type"] = "application/json"
         if token:
             headers["Authorization"] = f"Bearer {token}"
 
         request = requests.Request(
-            method, url, params=params, data=data, json=json, headers=headers,
+            method,
+            url,
+            params=params,
+            data=data,
+            json=json,
+            headers=headers,
         )
         prepped = request.prepare()
 
