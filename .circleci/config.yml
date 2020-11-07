@@ -117,6 +117,18 @@ jobs:
               exit 1
             fi
 
+  check-version:
+    executor:
+      name: python
+    steps:
+      - checkout
+      - setup_python
+      - run:
+          name: Check version and git tag value
+          command: |
+            export SDK_VERSION=$(poetry run python -c "from anymotion_sdk import __version__; print(__version__, end='')")
+            test $CIRCLE_TAG = $SDK_VERSION
+
   release:
     executor:
       name: python
@@ -167,6 +179,14 @@ workflows:
               only: /.*/
           requires:
             - setup-3.9
+      - check-version:
+          filters:
+            tags:
+              only: /^\d.*/
+            branches:
+              ignore: /.*/
+          requires:
+            - setup-3.9
       - approval-release:
           type: approval
           filters:
@@ -179,6 +199,7 @@ workflows:
             - measure-coverage
             - check-lint
             - check-security
+            - check-version
       - release:
           filters:
             tags:
