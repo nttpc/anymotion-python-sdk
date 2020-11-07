@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.2.3
+
+Unreleased
+
+- Added support for Python 3.9.
+
 ## 1.2.2
 
 Released 2020-09-14

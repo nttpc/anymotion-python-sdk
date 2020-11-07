@@ -7,7 +7,7 @@ executors:
     parameters:
       version:
         type: string
-        default: "3.8"
+        default: "3.9"
     docker:
       - image: circleci/python:<< parameters.version >>
 
@@ -16,7 +16,7 @@ commands:
     parameters:
       version:
         type: string
-        default: "3.8"
+        default: "3.9"
     steps:
       - restore_cache:
           keys:
@@ -34,7 +34,7 @@ jobs:
     parameters:
       version:
         type: string
-        default: "3.8"
+        default: "3.9"
     executor:
       name: python
       version: << parameters.version >>
@@ -46,7 +46,7 @@ jobs:
     parameters:
       version:
         type: string
-        default: "3.8"
+        default: "3.9"
     executor:
       name: python
       version: << parameters.version >>
@@ -136,14 +136,14 @@ workflows:
       - setup:
           matrix:
             parameters:
-              version: ["3.6", "3.7", "3.8"]
+              version: ["3.6", "3.7", "3.8", "3.9"]
           filters:
             tags:
               only: /.*/
       - test:
           matrix:
             parameters:
-              version: ["3.6", "3.7", "3.8"]
+              version: ["3.6", "3.7", "3.8", "3.9"]
           filters:
             tags:
               only: /.*/
@@ -154,19 +154,19 @@ workflows:
             tags:
               only: /.*/
           requires:
-            - test-3.8
+            - test-3.9
       - check-lint:
           filters:
             tags:
               only: /.*/
           requires:
-            - setup-3.8
+            - setup-3.9
       - check-security:
           filters:
             tags:
               only: /.*/
           requires:
-            - setup-3.8
+            - setup-3.9
       - approval-release:
           type: approval
           filters:
