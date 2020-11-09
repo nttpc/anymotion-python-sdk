@@ -2,9 +2,10 @@
 
 ## 1.2.3
 
-Unreleased
+Released 2020-11-09
 
 - Added support for Python 3.9.
+- Changed to use opencv-python 4.4 or higher with Python 3.7 or higher.
 
 ## 1.2.2
 
