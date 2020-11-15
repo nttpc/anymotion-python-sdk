@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.2.4
+
+Unreleased
+
+- Fixed a bug that extras library was installed without the extras option.
+
 ## 1.2.3
 
 Released 2020-11-09

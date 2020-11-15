@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "anymotion-sdk"
-version = "1.2.3"
+version = "1.2.4-dev"
 description = "AnyMotion SDK for Python"
 authors = ["Yusuke Kumihashi <y_kumiha@nttpc.co.jp>"]
 readme = "README.md"
@@ -17,11 +17,8 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.6"
-requests = "^2.22.0"
-opencv-python = [
-    { version = "~4.2", python = "~3.6", optional = true },
-    { version = "^4.4", python = ">3.6", optional = true }
-]
+requests = "^2.22"
+opencv-python = { version = "^4.4", optional = true }
 
 [tool.poetry.extras]
 cv = ["opencv-python"]
