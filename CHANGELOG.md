@@ -4,6 +4,7 @@
 
 Unreleased
 
+- Changed the build system to poetry-core.
 - Fixed a bug that extras library was installed without the extras option.
 
 ## 1.2.3
