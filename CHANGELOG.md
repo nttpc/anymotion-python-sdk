@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.2.4
+
+Released 2020-11-16
+
+- Changed the build system to poetry-core.
+- Fixed a bug that extras library was installed without the extras option.
+  (Use opencv-python 4.4 or higher on all Python versions.)
+
 ## 1.2.3
 
 Released 2020-11-09
