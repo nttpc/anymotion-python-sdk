@@ -37,7 +37,7 @@ pytest-cov = "^2.10.1"
 pytest-mock = "^3.3.1"
 pre-commit = { version = "^2.8", python = "^3.6.1" }
 requests-mock = "^1.7.0"
-tox = "^3.20"
+tox = "^3.21"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
