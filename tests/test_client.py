@@ -44,7 +44,9 @@ class TestInit(object):
         "args, expected",
         [
             ({"client_id": ""}, "Client ID is not set."),
+            ({"client_id": None}, "Client ID is not set."),
             ({"client_secret": ""}, "Client Secret is not set."),
+            ({"client_secret": None}, "Client Secret is not set."),
             ({"api_url": ""}, "Invalid API URL: "),
             (
                 {"api_url": "http://api.example.com/"},
