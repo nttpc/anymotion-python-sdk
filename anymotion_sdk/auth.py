@@ -30,10 +30,10 @@ class Authentication(object):
         base_url: str = "https://api.customer.jp/",
         session: Optional[HttpSession] = None,
     ):
-        if client_id is None or client_id == "":
+        if not client_id:
             raise ClientValueError("Client ID is not set.")
 
-        if client_secret is None or client_secret == "":
+        if not client_secret:
             raise ClientValueError("Client Secret is not set.")
 
         self.client_id = client_id
