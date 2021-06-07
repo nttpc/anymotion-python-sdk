@@ -33,7 +33,7 @@ flake8-docstrings = "^1.6"
 isort = "^5.8"
 mypy = "^0.812"
 pytest = "^6.2"
-pytest-cov = "^2.10.1"
+pytest-cov = "^2.12.1"
 pytest-mock = "^3.5"
 pre-commit = { version = "^2.11", python = "^3.6.1" }
 requests-mock = "^1.7.0"
