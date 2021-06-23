@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.2.5
+
+Released 2021-06-24
+
+- Updated urllib3 for security and other packages.
+
 ## 1.2.4
 
 Released 2020-11-16
