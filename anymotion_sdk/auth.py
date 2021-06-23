@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from logging import getLogger
 from typing import Optional
 from urllib.parse import urljoin
@@ -32,7 +32,6 @@ class Authentication(object):
     ):
         if not client_id:
             raise ClientValueError("Client ID is not set.")
-
         if not client_secret:
             raise ClientValueError("Client Secret is not set.")
 
@@ -84,6 +83,7 @@ class Authentication(object):
 
     def _is_expired(self, buffer: int = 300) -> bool:
         """Return whether or not the token has expired."""
-        expired = datetime.fromtimestamp(self.expired_at - buffer)
-        now = datetime.now()
+        expired = datetime.fromtimestamp(self.expired_at - buffer, timezone.utc)
+        now = datetime.now(timezone.utc)
+        logger.debug(f"expiration date of the token: {expired} (current date: {now})")
         return expired < now
