@@ -2,7 +2,7 @@
 
 ## 1.2.5
 
-Unreleased
+Released 2021-06-24
 
 - Updated urllib3 for security and other packages.
 

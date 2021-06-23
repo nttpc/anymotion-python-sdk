@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "anymotion-sdk"
-version = "1.2.4"
+version = "1.2.5"
 description = "AnyMotion SDK for Python"
 authors = ["Yusuke Kumihashi <y_kumiha@nttpc.co.jp>"]
 readme = "README.md"
@@ -31,7 +31,7 @@ flake8 = "^3.9"
 flake8-bugbear = "^21.4"
 flake8-docstrings = "^1.6"
 isort = "^5.8"
-mypy = "^0.902"
+mypy = "^0.910"
 pytest = "^6.2"
 pytest-cov = "^2.12"
 pytest-mock = "^3.6"
