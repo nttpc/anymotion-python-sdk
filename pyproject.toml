@@ -37,7 +37,7 @@ pytest-cov = "^2.12"
 pytest-mock = "^3.6"
 pre-commit = { version = "^2.13", python = "^3.6.1" }
 requests-mock = "^1.9"
-tox = "^3.23"
+tox = "^3.24"
 types-requests = "^2.25.0"
 types-pkg-resources = "^0.1.3"
 
