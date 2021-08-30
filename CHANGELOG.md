@@ -4,6 +4,7 @@
 
 Released 2021-09-XX
 
+- Changed token access url.
 - Updated packages.
 
 ## 1.2.5

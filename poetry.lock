@@ -730,7 +730,7 @@ cv = ["opencv-python"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "6295e287687fe7f6c9e879a766be069328b4df4ad9bbace64317d5e68c7dc3e4"
+content-hash = "16b6d4f9119db1f62e6a944a97c6a9d11c521e4115ec64c96111130162eed754"
 
 [metadata.files]
 appdirs = [
