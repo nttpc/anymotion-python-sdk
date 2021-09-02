@@ -15,7 +15,7 @@ def make_auth(requests_mock):
         auth = Authentication("client_id", "client_secret")
         requests_mock.register_uri(
             "POST",
-            "https://api.customer.jp/v1/oauth/accesstokens",
+            "https://api.customer.jp/oauth/v1/accesstokens",
             [
                 {
                     "json": {

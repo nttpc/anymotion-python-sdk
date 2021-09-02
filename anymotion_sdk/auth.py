@@ -58,7 +58,7 @@ class Authentication(object):
 
     def _get_token(self) -> None:
         """Get a token using client ID and secret."""
-        oauth_url = urljoin(self.base_url, "v1/oauth/accesstokens")
+        oauth_url = urljoin(self.base_url, "oauth/v1/accesstokens")
         data = {
             "grantType": "client_credentials",
             "clientId": self.client_id,
