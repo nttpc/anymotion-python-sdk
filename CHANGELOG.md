@@ -2,7 +2,7 @@
 
 ## 1.2.6
 
-Released 2021-09-XX
+Released 2021-09-02
 
 - Changed token access url.
 - Updated packages.
